@@ -1,0 +1,5 @@
+BasedOnStyle: Google
+BreakBeforeBraces: Allman
+IndentWidth: 2
+ColumnLimit: 80
+SpacesBeforeTrailingComments: 1
