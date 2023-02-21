@@ -81,8 +81,8 @@ Id<HalfEdge> GradientMesh::extrude(Id<HalfEdge> edge)
   auto opp_handle = handles.add(Handle(handles[twin_handles[1]]));
   auto opp_handle_2 = handles.add(Handle(handles[twin_handles[0]]));
 
-  QVector3D color_v2 = edges[next].color;
-  QVector3D color_v1 = edges[edge].color;
+  Vector3 color_v2 = edges[next].color;
+  Vector3 color_v1 = edges[edge].color;
   auto twist = edges[edge].twist;
 
   auto twin = half_edge(v2, twin_handles, color_v2, twist, edge);

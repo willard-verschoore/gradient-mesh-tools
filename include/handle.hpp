@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QVector2D>
 #include <variant>
 
 #include "draggable.hpp"
@@ -19,7 +18,7 @@ struct Handle : public Draggable
 {
   Handle(Interpolant tangent) : tangent(tangent) {}
 
-  void drag(const QVector2D& delta) override { tangent += 3.0f * delta; }
+  void drag(const Vector2& delta) override { tangent += 3.0f * delta; }
 
   /// Tangent of the curve in Hermite form.
   /**

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QVector3D>
 #include <map>
 #include <optional>
 #include <variant>
@@ -56,7 +55,7 @@ struct HalfEdge
 {
   /// Creates a parent half-edge with the given parameters.
   HalfEdge(Id<ControlPoint> origin, std::array<Id<Handle>, 2> handles,
-           QVector3D color, Interpolant twist = Interpolant(0.0f),
+           Vector3 color, Interpolant twist = Interpolant(0.0f),
            std::optional<Id<HalfEdge>> twin = std::nullopt)
       : kind(Parent{origin, handles}), color(color), twist(twist), twin(twin)
   {
@@ -64,7 +63,7 @@ struct HalfEdge
 
   /// Creates a child half-edge with the given parameters.
   HalfEdge(Id<HalfEdge> parent, Interval interval,
-           std::optional<std::array<Id<Handle>, 2>> handles, QVector3D color,
+           std::optional<std::array<Id<Handle>, 2>> handles, Vector3 color,
            Interpolant twist = Interpolant(0.0f),
            std::optional<Id<HalfEdge>> twin = std::nullopt)
       : kind(Child{parent, interval, handles}),
@@ -115,7 +114,7 @@ struct HalfEdge
    * The color at the origin, stored in the half-edge
    * to enable sharp transitions.
    */
-  QVector3D color;
+  Vector3 color;
   /// Twist vector at the origin point.
   /**
    * Should normally be 0,

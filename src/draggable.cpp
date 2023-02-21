@@ -1,7 +1,7 @@
 #include "draggable.hpp"
 
-bool is_hovering(const QVector2D& cursor, const QVector2D& point,
+bool is_hovering(const Vector2& cursor, const Vector2& point,
                  const QRectF& viewport)
 {
-  return cursor.distanceToPoint(point) <= POINT_SIZE * viewport.height();
+  return distance(cursor, point) <= POINT_SIZE * viewport.height();
 }

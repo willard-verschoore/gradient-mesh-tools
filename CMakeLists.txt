@@ -19,6 +19,8 @@ set(SOURCE_FILES
   src/merging.cpp
   src/splitting.cpp
   src/tessellation.cpp
+  src/vector2.cpp
+  src/vector3.cpp
 )
 
 add_library(${PROJECT_NAME} ${SOURCE_FILES})

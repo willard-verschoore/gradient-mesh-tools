@@ -9,7 +9,7 @@
 void read_cgm_handle(QStringList values, SlotMap<Handle>& handles)
 {
   Id<HalfEdge> edge = {values[3].toUInt(), 0};
-  QVector2D coord = QVector2D(values[1].toFloat(), values[2].toFloat());
+  Vector2 coord = Vector2(values[1].toFloat(), values[2].toFloat());
 
   auto handle = handles.add(Handle({}));
   handles[handle].edge = edge;
@@ -18,7 +18,7 @@ void read_cgm_handle(QStringList values, SlotMap<Handle>& handles)
   /*
   // ControlPoint,                                             vCoords,
   vCurveLink,          vValency,
-  //gradientMesh->controlPoints.append(ControlPoint(QVector2D(values[1].toFloat(),
+  //gradientMesh->controlPoints.append(ControlPoint(Vector2(values[1].toFloat(),
   values[2].toFloat()), values[3].toInt(), values[4].toInt(),
   // vIsTpoint,                          vTpointConnections,     vLevel, vIndex
   //  (values[5] == "1" ? true : false), values[6].toInt(), values[7].toInt(),
@@ -30,7 +30,7 @@ void read_cgm_point(QStringList values, std::vector<Id<HalfEdge>>& t_stems,
                     SlotMap<ControlPoint>& points)
 {
   Id<HalfEdge> edge = {values[3].toUInt(), 0};
-  QVector2D coord = QVector2D(values[1].toFloat(), values[2].toFloat());
+  Vector2 coord = Vector2(values[1].toFloat(), values[2].toFloat());
 
   auto point = points.add(ControlPoint({}));
   points[point].coords = coord;
@@ -46,7 +46,7 @@ void read_cgm_point(QStringList values, std::vector<Id<HalfEdge>>& t_stems,
   /*
   // ControlPoint,                                             vCoords,
   vCurveLink,          vValency,
-  //gradientMesh->controlPoints.append(ControlPoint(QVector2D(values[1].toFloat(),
+  //gradientMesh->controlPoints.append(ControlPoint(Vector2(values[1].toFloat(),
   values[2].toFloat()), values[3].toInt(), values[4].toInt(),
   // vIsTpoint,                          vTpointConnections,     vLevel, vIndex
   //  (values[5] == "1" ? true : false), values[6].toInt(), values[7].toInt(),
@@ -119,12 +119,12 @@ void GradientMesh::open_from_cgm(QString file_name)
           }
 
           Interpolant twist;
-          twist.coords = QVector2D(values[4].toFloat(), values[5].toFloat());
-          twist.color = QVector3D(values[15].toFloat(), values[16].toFloat(),
-                                  values[17].toFloat());
+          twist.coords = Vector2(values[4].toFloat(), values[5].toFloat());
+          twist.color = Vector3(values[15].toFloat(), values[16].toFloat(),
+                                values[17].toFloat());
 
-          QVector3D color = QVector3D(values[6].toFloat(), values[7].toFloat(),
-                                      values[8].toFloat());
+          Vector3 color = Vector3(values[6].toFloat(), values[7].toFloat(),
+                                  values[8].toFloat());
 
           Id<Handle> handleTail = {values[2].toUInt(), 0};
           Id<Handle> handleHead = {values[3].toUInt(), 0};
@@ -200,7 +200,7 @@ void GradientMesh::open_from_cgm(QString file_name)
         Interpolant twist = edges[twin].twist;
 
         auto parent_twin = half_edge(next_parent_f->origin, twin_handles,
-                                     QVector3D(), twist, twin);
+                                     Vector3(), twist, twin);
         edges[parent_twin].leftmost_child = edges[twin].twin;
         edges[twin].twin = parent_twin;
 
@@ -314,8 +314,7 @@ void GradientMesh::open_from_file(QString file_name)
       tokens = line.split(" ", QString::SkipEmptyParts);
 
       auto point = points.add(ControlPoint({}));
-      points[point].coords =
-          QVector2D(tokens[0].toFloat(), tokens[1].toFloat());
+      points[point].coords = Vector2(tokens[0].toFloat(), tokens[1].toFloat());
       points[point].edge = {tokens[2].toUInt(), 0};
     }
 
@@ -328,12 +327,12 @@ void GradientMesh::open_from_file(QString file_name)
       auto handle = handles.add(Handle({}));
       handles[handle].edge = {tokens[0].toUInt(), 0};
 
-      handles[handle].tangent.coords.setX(tokens[1].toFloat());
-      handles[handle].tangent.coords.setY(tokens[2].toFloat());
+      handles[handle].tangent.coords.x = tokens[1].toFloat();
+      handles[handle].tangent.coords.y = tokens[2].toFloat();
 
-      handles[handle].tangent.color.setX(tokens[3].toFloat());
-      handles[handle].tangent.color.setY(tokens[4].toFloat());
-      handles[handle].tangent.color.setZ(tokens[5].toFloat());
+      handles[handle].tangent.color.x = tokens[3].toFloat();
+      handles[handle].tangent.color.y = tokens[4].toFloat();
+      handles[handle].tangent.color.z = tokens[5].toFloat();
     }
 
     for (size_t i = 0; i < num_patches; ++i)
@@ -356,11 +355,11 @@ void GradientMesh::open_from_file(QString file_name)
       Id<HalfEdge> edge;
       Interval interval = {tokens[0].toFloat(), tokens[1].toFloat()};
       Interpolant twist;
-      twist.coords = QVector2D(tokens[2].toFloat(), tokens[3].toFloat());
-      twist.color = QVector3D(tokens[4].toFloat(), tokens[5].toFloat(),
-                              tokens[6].toFloat());
-      QVector3D color = QVector3D(tokens[7].toFloat(), tokens[8].toFloat(),
-                                  tokens[9].toFloat());
+      twist.coords = Vector2(tokens[2].toFloat(), tokens[3].toFloat());
+      twist.color = Vector3(tokens[4].toFloat(), tokens[5].toFloat(),
+                            tokens[6].toFloat());
+      Vector3 color = Vector3(tokens[7].toFloat(), tokens[8].toFloat(),
+                              tokens[9].toFloat());
 
       std::optional<std::array<Id<Handle>, 2>> edge_handles = std::nullopt;
       if (tokens[10].toInt() >= 0)
@@ -432,20 +431,20 @@ void GradientMesh::write_to_file(QTextStream& file) const
 
   for (auto control_point : points)
   {
-    file << control_point.coords.x() << " ";
-    file << control_point.coords.y() << " ";
+    file << control_point.coords.x << " ";
+    file << control_point.coords.y << " ";
     file << control_point.edge.id << "\n";
   }
 
   for (auto handle : handles)
   {
     file << handle.edge.id << " ";
-    file << handle.tangent.coords.x() << " ";
-    file << handle.tangent.coords.y() << " ";
+    file << handle.tangent.coords.x << " ";
+    file << handle.tangent.coords.y << " ";
 
-    file << handle.tangent.color.x() << " ";
-    file << handle.tangent.color.y() << " ";
-    file << handle.tangent.color.z() << "\n";
+    file << handle.tangent.color.x << " ";
+    file << handle.tangent.color.y << " ";
+    file << handle.tangent.color.z << "\n";
   }
 
   for (auto patch : patches)
@@ -457,14 +456,14 @@ void GradientMesh::write_to_file(QTextStream& file) const
   {
     file << edge.interval().start << " "; // 0
     file << edge.interval().end << " ";   // 1
-    file << edge.twist.coords.x() << " "; // 2
-    file << edge.twist.coords.y() << " "; // 3
-    file << edge.twist.color.x() << " ";  // 4
-    file << edge.twist.color.y() << " ";  // 5
-    file << edge.twist.color.z() << " ";  // 6
-    file << edge.color.x() << " ";        // 7
-    file << edge.color.y() << " ";        // 8
-    file << edge.color.z() << " ";        // 9
+    file << edge.twist.coords.x << " ";   // 2
+    file << edge.twist.coords.y << " ";   // 3
+    file << edge.twist.color.x << " ";    // 4
+    file << edge.twist.color.y << " ";    // 5
+    file << edge.twist.color.z << " ";    // 6
+    file << edge.color.x << " ";          // 7
+    file << edge.color.y << " ";          // 8
+    file << edge.color.z << " ";          // 9
 
     if (edge.handles().has_value())
     {

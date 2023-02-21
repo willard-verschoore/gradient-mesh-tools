@@ -1,8 +1,6 @@
 #pragma once
 
 #include <QRectF>
-#include <QVector2D>
-#include <QVector3D>
 #include <array>
 #include <map>
 #include <set>
@@ -32,7 +30,7 @@ class GradientMesh
    * @param colors: The color of the square's four corners,
    *    in the order (top left, top right, bottom right, bottom left).
    */
-  GradientMesh(float side, const std::array<QVector3D, 4>& colors);
+  GradientMesh(float side, const std::array<Vector3, 4>& colors);
 
   /// Finds the draggable handle at the cursor position, if any exists.
   /**
@@ -43,14 +41,14 @@ class GradientMesh
    * @param cursor: the cursor's position in world space.
    * @param viewport: the viewport frustum as a world-space rectangle.
    */
-  Draggable* select(const QVector2D& cursor, const QRectF& viewport);
+  Draggable* select(const Vector2& cursor, const QRectF& viewport);
 
   /// Finds the closest half-edge to the cursor position, if any.
   /**
    * If the cursor is laying outside of the any of the mesh's patches,
    * no edge is returned.
    */
-  std::optional<Id<HalfEdge>> select_edge(const QVector2D& cursor);
+  std::optional<Id<HalfEdge>> select_edge(const Vector2& cursor);
 
   /// Subdivides the selected patch at (t, t2)
   /**
@@ -116,7 +114,7 @@ class GradientMesh
 
   Id<Handle> get_handle_by_number(Id<HalfEdge> edge, int index);
 
-  void set_position(Id<HalfEdge> edge, QVector2D pos);
+  void set_position(Id<HalfEdge> edge, Vector2 pos);
 
   /// removes all t junctions by propagating their split along the mesh
   /**
@@ -149,8 +147,8 @@ class GradientMesh
    */
   Id<HalfEdge> split(Id<HalfEdge> top_edge, float t);
   /// Sets a half-edge's color at the origin.
-  void set_color(Id<HalfEdge> edge, QVector3D color);
-  void set_color_vertex(Id<HalfEdge> edge, QVector3D color);
+  void set_color(Id<HalfEdge> edge, Vector3 color);
+  void set_color_vertex(Id<HalfEdge> edge, Vector3 color);
   /// Returns the hermite vector of the given edge.
   hermite::CurveMatrix curve_matrix(Id<HalfEdge> edge) const;
   /**
@@ -212,7 +210,7 @@ class GradientMesh
    * to the returned half-edge.
    */
   Id<HalfEdge> half_edge(Id<ControlPoint> origin,
-                         std::array<Id<Handle>, 2> handles, QVector3D color,
+                         std::array<Id<Handle>, 2> handles, Vector3 color,
                          Interpolant twist = {},
                          std::optional<Id<HalfEdge>> twin = std::nullopt);
   /// Creates a new child half-edge with the given parameters.
@@ -222,7 +220,7 @@ class GradientMesh
    */
   Id<HalfEdge> half_edge(Id<HalfEdge> parent, Interval interval,
                          std::optional<std::array<Id<Handle>, 2>> handles,
-                         QVector3D color, Interpolant twist = {},
+                         Vector3 color, Interpolant twist = {},
                          std::optional<Id<HalfEdge>> twin = std::nullopt);
 
   /// Establishes the neighbor relationship between a and b.
@@ -301,7 +299,7 @@ class GradientMesh
    * compared to `connected_junction.`
    */
   std::array<Id<HalfEdge>, 2> parent_junction(
-      Id<HalfEdge> edge, float t, Id<ControlPoint> mid_point, QVector3D color,
+      Id<HalfEdge> edge, float t, Id<ControlPoint> mid_point, Vector3 color,
       Interpolant twist, std::array<Id<Handle>, 2> parallel_handles);
 
   /**

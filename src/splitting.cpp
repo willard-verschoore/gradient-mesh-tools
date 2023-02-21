@@ -410,7 +410,7 @@ void GradientMesh::snap_to_twin(Id<HalfEdge> edge)
 }
 
 std::array<Id<HalfEdge>, 2> GradientMesh::parent_junction(
-    Id<HalfEdge> left, float t, Id<ControlPoint> mid_point, QVector3D color,
+    Id<HalfEdge> left, float t, Id<ControlPoint> mid_point, Vector3 color,
     Interpolant twist, std::array<Id<Handle>, 2> parallel_handles)
 {
   auto& e = edges[left];

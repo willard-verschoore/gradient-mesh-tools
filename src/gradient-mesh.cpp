@@ -8,15 +8,15 @@
 using namespace hermite;
 
 // Rotates a 2D vector by 90 degrees clockwise.
-static QVector2D rotate(const QVector2D& v) { return QVector2D(-v.y(), v.x()); }
+static Vector2 rotate(const Vector2& v) { return Vector2(-v.y, v.x); }
 
-GradientMesh::GradientMesh(float side, const std::array<QVector3D, 4>& colors)
+GradientMesh::GradientMesh(float side, const std::array<Vector3, 4>& colors)
 {
   const auto p = patches.add(Patch{});
   // Tangents colors are initialized to 0 for G^1 continuity.
   // See "Locally Refinable gradient meshes" section 3.2 for reference.
-  auto direction = QVector2D(1.0f, 0.0f);
-  auto start = QVector2D(-0.5f, -0.5f) * side;
+  auto direction = Vector2(1.0f, 0.0f);
+  auto start = Vector2(-0.5f, -0.5f) * side;
 
   // We generate the quad by starting in the top-left corner, advancing in the
   // current direction, and then rotating by 90 degrees,
@@ -44,7 +44,7 @@ GradientMesh::GradientMesh(float side, const std::array<QVector3D, 4>& colors)
   connect(edge, top);
 }
 
-Draggable* GradientMesh::select(const QVector2D& cursor, const QRectF& viewport)
+Draggable* GradientMesh::select(const Vector2& cursor, const QRectF& viewport)
 {
   for (auto& point : points)
   {
@@ -64,7 +64,7 @@ Draggable* GradientMesh::select(const QVector2D& cursor, const QRectF& viewport)
   return nullptr;
 }
 
-std::optional<Id<HalfEdge>> GradientMesh::select_edge(const QVector2D& cursor)
+std::optional<Id<HalfEdge>> GradientMesh::select_edge(const Vector2& cursor)
 {
   auto dist = std::numeric_limits<float>::infinity();
   std::optional<Id<HalfEdge>> ret = std::nullopt;
@@ -75,7 +75,7 @@ std::optional<Id<HalfEdge>> GradientMesh::select_edge(const QVector2D& cursor)
     auto right = edges[top].next;
     auto bottom = edges[right].next;
 
-    if (!bounding_box(patch_matrix(top)).contains(cursor.toPointF()))
+    if (!bounding_box(patch_matrix(top)).contains(QPointF(cursor.x, cursor.y)))
     {
       continue;
     }
@@ -108,7 +108,7 @@ std::optional<Id<HalfEdge>> GradientMesh::select_edge(const QVector2D& cursor)
   return ret;
 }
 
-void GradientMesh::set_position(Id<HalfEdge> edge, QVector2D pos)
+void GradientMesh::set_position(Id<HalfEdge> edge, Vector2 pos)
 {
   auto [v1, v2] = get_control_points(edge);
   auto mid_point = 0.5 * (points[v1].coords + points[v2].coords);
@@ -139,18 +139,18 @@ Id<HalfEdge> GradientMesh::prev(Id<HalfEdge> edge) const
   return edges[edge].prev;
 }
 
-void GradientMesh::set_color(Id<HalfEdge> edge, QVector3D color)
+void GradientMesh::set_color(Id<HalfEdge> edge, Vector3 color)
 {
   auto& e = edges[edge];
   e.color = color;
   if (auto h = e.handles())
   {
-    handles[h.value()[0]].tangent.color = QVector3D();
-    handles[h.value()[1]].tangent.color = QVector3D();
+    handles[h.value()[0]].tangent.color = Vector3();
+    handles[h.value()[1]].tangent.color = Vector3();
   }
 }
 
-void GradientMesh::set_color_vertex(Id<HalfEdge> edge, QVector3D color)
+void GradientMesh::set_color_vertex(Id<HalfEdge> edge, Vector3 color)
 {
   int cnt = 0;
   auto he = edge;
@@ -221,7 +221,7 @@ std::vector<Interpolant> GradientMesh::point_data() const
   ret.reserve(points.size());
   for (const auto& point : points)
   {
-    auto color = QVector3D(0.0f, 0.0f, 0.0f);
+    auto color = Vector3(0.0f, 0.0f, 0.0f);
     ret.emplace_back(point.coords, color);
   }
   return ret;
@@ -240,7 +240,7 @@ std::vector<std::array<Interpolant, 2>> GradientMesh::handle_data() const
 
 Id<HalfEdge> GradientMesh::half_edge(Id<ControlPoint> origin,
                                      std::array<Id<Handle>, 2> edge_handles,
-                                     QVector3D color, Interpolant twist,
+                                     Vector3 color, Interpolant twist,
                                      std::optional<Id<HalfEdge>> twin)
 {
   auto edge = edges.add(HalfEdge(origin, edge_handles, color, twist, twin));
@@ -251,7 +251,7 @@ Id<HalfEdge> GradientMesh::half_edge(Id<ControlPoint> origin,
 
 Id<HalfEdge> GradientMesh::half_edge(
     Id<HalfEdge> parent, Interval interval,
-    std::optional<std::array<Id<Handle>, 2>> edge_handles, QVector3D color,
+    std::optional<std::array<Id<Handle>, 2>> edge_handles, Vector3 color,
     Interpolant twist, std::optional<Id<HalfEdge>> twin)
 {
   auto edge =
@@ -279,7 +279,7 @@ std::array<Interpolant, 4> GradientMesh::edge_tangents(Id<HalfEdge> edge) const
 {
   const auto& e = edges[edge];
   // Origin coordinates
-  QVector2D point;
+  Vector2 point;
   // Derivatives
   Interpolant start, end;
   visit(

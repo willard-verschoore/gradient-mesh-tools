@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QVector2D>
-
 #include "draggable.hpp"
 #include "storage.hpp"
 
@@ -14,12 +12,12 @@ struct ControlPoint : public Draggable
   /**
    * @param coords: the control point's position in world space.
    */
-  ControlPoint(QVector2D coords) : coords(coords) {}
+  ControlPoint(Vector2 coords) : coords(coords) {}
 
-  void drag(const QVector2D& delta) override { coords += delta; }
+  void drag(const Vector2& delta) override { coords += delta; }
 
   /// The control point's position in world space.
-  QVector2D coords;
+  Vector2 coords;
   /// Reference to the half-edge originating from this control point.
   Id<HalfEdge> edge;
 };

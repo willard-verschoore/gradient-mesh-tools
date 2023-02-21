@@ -1,6 +1,7 @@
-#include <QVector2D>
-#include <QVector3D>
 #include <cmath>
+
+#include "vector2.hpp"
+#include "vector3.hpp"
 
 /// A tuple of (coordinates, color), acting as a 5D vector.
 /**
@@ -14,9 +15,9 @@ struct Interpolant
   /// Initializes all components to the given value.
   constexpr Interpolant(float x) : coords(x, x), color(x, x, x) {}
   /// Initializes coordinates to the given value, and color to zero.
-  constexpr Interpolant(QVector2D coords) : coords(coords), color() {}
+  constexpr Interpolant(Vector2 coords) : coords(coords), color() {}
   /// Initializes coordinates and color to the given values.
-  constexpr Interpolant(QVector2D coords, QVector3D color)
+  constexpr Interpolant(Vector2 coords, Vector3 color)
       : coords(coords), color(color)
   {
   }
@@ -43,9 +44,9 @@ struct Interpolant
   float operator[](int index) const;
 
   /// The vector's coordinates in world space.
-  QVector2D coords;
+  Vector2 coords;
   /// The vector's color in RGB colorspace.
-  QVector3D color;
+  Vector3 color;
 };
 
 /// Element-wise negates all components of a vector.

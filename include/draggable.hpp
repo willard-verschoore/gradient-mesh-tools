@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QRectF>
-#include <QVector2D>
+
+#include "vector2.hpp"
 
 /// Abstract class for user-moveable controls (e.g. control points and handles)
 /**
@@ -18,7 +19,7 @@ class Draggable
    * @param delta: the vector representing the difference between the object's
    * current and intended new position.
    */
-  virtual void drag(const QVector2D& delta) = 0;
+  virtual void drag(const Vector2& delta) = 0;
 };
 
 /**
@@ -33,5 +34,5 @@ inline float POINT_SIZE = 0.02f;
  * @param point: the target point's position in world space.
  * @param viewport: the current viewport as a world-space rectangle.
  */
-bool is_hovering(const QVector2D& cursor, const QVector2D& point,
+bool is_hovering(const Vector2& cursor, const Vector2& point,
                  const QRectF& viewport);

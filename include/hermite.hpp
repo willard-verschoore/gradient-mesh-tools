@@ -7,8 +7,6 @@
 
 #include <QGenericMatrix>
 #include <QRectF>
-#include <QVector2D>
-#include <QVector3D>
 #include <array>
 #include <cstdint>
 
@@ -75,5 +73,5 @@ Interpolant mixed_derivative(const PatchMatrix& mat, float u, float v);
 /// Returns the patch's AABB as a rectangle in world space.
 QRectF bounding_box(const PatchMatrix& patch);
 /// Returns an approximation of the point's distance to the given hermite curve.
-float distance_to_curve(const QVector2D& cursor, const CurveMatrix& curve);
+float distance_to_curve(const Vector2& cursor, const CurveMatrix& curve);
 } // namespace hermite
