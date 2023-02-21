@@ -328,17 +328,17 @@ PatchMatrix GradientMesh::patch_matrix(Id<HalfEdge> top) const
   auto [m3, m3uv, m3v, m2v] = edge_tangents(bottom);
   auto [m2, m2uv, m2u, m0u] = edge_tangents(left);
 
-  return matrix<4, 4>({m0, m0v, m1v, m1,       //
-                       -m0u, m0uv, -m1uv, m1u, //
-                       -m2u, -m2uv, m3uv, m3u, //
-                       m2, -m2v, -m3v, m3});
+  return {{m0, m0v, m1v, m1,       //
+           -m0u, m0uv, -m1uv, m1u, //
+           -m2u, -m2uv, m3uv, m3u, //
+           m2, -m2v, -m3v, m3}};
 }
 
 CurveMatrix GradientMesh::curve_matrix(Id<HalfEdge> edge) const
 {
   auto [m0, twist, m0v, m1v] = edge_tangents(edge);
   auto m1 = edge_tangents(edges[edge].next)[0];
-  return matrix<4, 1>({m0, m0v, m1v, m1});
+  return {{m0, m0v, m1v, m1}};
 }
 
 EdgeBoundary GradientMesh::boundary(Id<HalfEdge> edge) const
@@ -376,7 +376,7 @@ CurveMatrix GradientMesh::split_curve(Id<HalfEdge> edge, float t) const
   auto m0 = orthogonal_derivative(mat, 0.0f, t);
   auto m1 = orthogonal_derivative(mat, 1.0f, t);
   auto p1 = interpolate(mat, 1.0f, t);
-  return matrix<4, 1>({p0, m0, m1, p1});
+  return {{p0, m0, m1, p1}};
 }
 
 std::set<float> GradientMesh::snap_points(Id<HalfEdge> edge) const

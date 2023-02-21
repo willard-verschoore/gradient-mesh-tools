@@ -8,11 +8,11 @@
  */
 inline hermite::PatchMatrix parent_left(hermite::PatchMatrix left, float t)
 {
-  auto mat = hermite::matrix<4, 4>({1.0f, 0.0f, 0.0f, 0.0f,             //
-                                    0.0f, 1.0f / t, 0.0f, 0.0f,         //
-                                    0.0f, 0.0f, 1.0f / pow(t, 2), 0.0f, //
-                                    0.0f, 0.0f, 0.0f, 1.0f / pow(t, 3)});
-  auto s_Linv = hermite::n_inv * mat * hermite::n;
+  auto mat = hermite::PatchMatrix{{1.0f, 0.0f, 0.0f, 0.0f,             //
+                                   0.0f, 1.0f / t, 0.0f, 0.0f,         //
+                                   0.0f, 0.0f, 1.0f / pow(t, 2), 0.0f, //
+                                   0.0f, 0.0f, 0.0f, 1.0f / pow(t, 3)}};
+  auto s_Linv = hermite::PatchMatrix::N_INV * mat * hermite::PatchMatrix::N;
   return left * s_Linv.transposed();
 }
 
@@ -28,20 +28,20 @@ inline hermite::PatchMatrix parent_right(hermite::PatchMatrix right, float t)
   auto tf2 = pow(tf, 2);
   auto tf3 = pow(tf, 3);
   auto mat =
-      hermite::matrix<4, 4>({1.0f, -t / tf, t2 / tf2, -t3 / tf3,          //
-                             0.0f, 1.0f / tf, -2 * t / tf2, 3 * t2 / tf3, //
-                             0.0f, 0.0f, 1.0f / tf2, -3 * t / tf3,        //
-                             0.0f, 0.0f, 0.0f, 1.0f / tf3});
-  auto s_Rinv = hermite::n_inv * mat * hermite::n;
+      hermite::PatchMatrix{{1.0f, -t / tf, t2 / tf2, -t3 / tf3,          //
+                            0.0f, 1.0f / tf, -2 * t / tf2, 3 * t2 / tf3, //
+                            0.0f, 0.0f, 1.0f / tf2, -3 * t / tf3,        //
+                            0.0f, 0.0f, 0.0f, 1.0f / tf3}};
+  auto s_Rinv = hermite::PatchMatrix::N_INV * mat * hermite::PatchMatrix::N;
   return right * s_Rinv.transposed();
 }
 
 /**
  * Return the specified CurveMatrix, but flipped.
  */
-inline hermite::CurveMatrix flip(hermite::CurveMatrix mat)
+inline hermite::CurveMatrix flip(hermite::CurveMatrix curve)
 {
-  return hermite::matrix<4, 1>({mat(0, 3), -mat(0, 2), -mat(0, 1), mat(0, 0)});
+  return hermite::CurveMatrix{{curve[3], -curve[2], -curve[1], curve[0]}};
 }
 
 // Simple implementation, multiple iterations are necessary.
@@ -120,13 +120,14 @@ void GradientMesh::merge_neighbours(Id<HalfEdge> separator_edge)
   // Handle inside edges
   auto [top_left_child, top_left_parent, top_orthogonal,
         top_orthogonal_origin] =
-      merge_inside(top_left, top_right, hermite::row(hermite_parent, 0),
+      merge_inside(top_left, top_right, hermite::CurveMatrix(hermite_parent, 0),
                    relative_top_left_length, relative_top_adjacent_length);
   auto [bottom_right_child, bottom_right_parent, bottom_orthogonal,
         bottom_orthogonal_origin] =
-      merge_inside(
-          bottom_right, bottom_left, flip(hermite::row(hermite_parent, 3)),
-          relative_bottom_left_length, relative_bottom_adjacent_length);
+      merge_inside(bottom_right, bottom_left,
+                   flip(hermite::CurveMatrix(hermite_parent, 3)),
+                   relative_bottom_left_length,
+                   relative_bottom_adjacent_length);
 
   // Simplify edges
   top_left = merge_parent_with_child(top_left_child);

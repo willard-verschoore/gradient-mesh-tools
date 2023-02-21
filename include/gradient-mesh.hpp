@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QRectF>
+#include <QTextStream>
 #include <array>
 #include <map>
 #include <set>

@@ -5,93 +5,69 @@
 namespace hermite
 {
 
-template <std::size_t I>
-static inline CurveMatrix extract_row(const PatchMatrix& mat)
-{
-  std::array<Interpolant, 8> arr;
-  mat.copyDataTo(arr.data());
-  return CurveMatrix(arr.data() + I * 4);
-}
-
-static inline Interpolant dot(const CurveMatrix& a, const CurveMatrix& b)
-{
-  return (a * b.transposed())(0, 0);
-}
-
 static CurveMatrix vec(float t)
 {
-  auto row = matrix<4, 1>({
-      1.0f,
-      t,
-      t * t,
-      t * t * t,
-  });
-  return row * n;
+  CurveMatrix row{{1.0f, t, t * t, t * t * t}};
+  return dot(row, PatchMatrix::N);
 }
 
 static CurveMatrix v_prime(float t)
 {
-  auto row = matrix<4, 1>({
-      0.0f,
-      1.0f,
-      2.0f * t,
-      3.0f * t * t,
-  });
-  return row * n;
+  CurveMatrix row{{0.0f, 1.0f, 2.0f * t, 3.0f * t * t}};
+  return dot(row, PatchMatrix::N);
 }
+
 static CurveMatrix v_second(float t)
 {
-  auto row = matrix<4, 1>({
-      0.0f,
-      0.0f,
-      2.0f,
-      6.0f * t,
-  });
-  return row * n;
+  CurveMatrix row{{0.0f, 0.0f, 2.0f, 6.0f * t}};
+  return dot(row, PatchMatrix::N);
 }
 
-Interpolant interpolate(const CurveMatrix& mat, float t)
+Interpolant interpolate(const CurveMatrix& curve, float t)
 {
-  return dot(mat, vec(t));
-}
-Interpolant parallel_derivative(const CurveMatrix& mat, float t)
-{
-  return dot(mat, v_prime(t));
-}
-Interpolant second_parallel_derivative(const CurveMatrix& mat, float t)
-{
-  return dot(mat, v_second(t));
+  return dot(curve, vec(t));
 }
 
-Interpolant max_second_parallel_derivative(const CurveMatrix& mat,
+Interpolant parallel_derivative(const CurveMatrix& curve, float t)
+{
+  return dot(curve, v_prime(t));
+}
+
+Interpolant second_parallel_derivative(const CurveMatrix& curve, float t)
+{
+  return dot(curve, v_second(t));
+}
+
+Interpolant max_second_parallel_derivative(const CurveMatrix& curve,
                                            const Interval& interval)
 {
   // Since second derivative is linear, the maximum and minimum values will be
   // at the endpoints.
-  auto min = second_parallel_derivative(mat, interval.start);
-  auto max = second_parallel_derivative(mat, interval.end);
+  auto min = second_parallel_derivative(curve, interval.start);
+  auto max = second_parallel_derivative(curve, interval.end);
   for (int i = 0; i < Interpolant::COMPONENTS; ++i)
-  {
     max[i] = std::max(std::abs(min[i]), std::abs(max[i]));
-  }
   return max * length(interval);
 }
 
-Interpolant interpolate(const PatchMatrix& mat, float u, float v)
+Interpolant interpolate(const PatchMatrix& patch, float u, float v)
 {
-  return dot(vec(u) * mat, vec(v));
+  return dot(dot(vec(u), patch), vec(v));
 }
-Interpolant parallel_derivative(const PatchMatrix& mat, float u, float v)
+
+Interpolant parallel_derivative(const PatchMatrix& patch, float u, float v)
 {
-  return dot(vec(u) * mat, v_prime(v));
+  return dot(dot(vec(u), patch), v_prime(v));
 }
-Interpolant orthogonal_derivative(const PatchMatrix& mat, float u, float v)
+
+Interpolant orthogonal_derivative(const PatchMatrix& patch, float u, float v)
 {
-  return dot(v_prime(u) * mat, vec(v));
+  return dot(dot(v_prime(u), patch), vec(v));
 }
-Interpolant mixed_derivative(const PatchMatrix& mat, float u, float v)
+
+Interpolant mixed_derivative(const PatchMatrix& curve, float u, float v)
 {
-  return dot(v_prime(u) * mat, v_prime(v));
+  return dot(dot(v_prime(u), curve), v_prime(v));
 }
 
 static QRectF corner_bounds(const PatchMatrix& patch)
@@ -139,4 +115,5 @@ float distance_to_curve(const Vector2& cursor, const CurveMatrix& curve)
   }
   return dist;
 }
+
 } // namespace hermite
