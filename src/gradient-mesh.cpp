@@ -44,68 +44,71 @@ GradientMesh::GradientMesh(float side, const std::array<Vector3, 4>& colors)
   connect(edge, top);
 }
 
-Draggable* GradientMesh::select(const Vector2& cursor, const QRectF& viewport)
+std::pair<Id<Handle>, float> GradientMesh::nearest_handle(
+    Vector2 const& position)
 {
-  for (auto& point : points)
+  float min_distance = std::numeric_limits<float>::infinity();
+  Id<Handle> nearest;
+
+  auto ids = handles.get_indirection();
+  for (auto id : ids)
   {
-    if (is_hovering(cursor, point.coords, viewport))
+    Id<Handle> handle_id = {id.id, id.version}; // Reinterpret type.
+    auto [start, end] = endpoints(handles[handle_id]);
+    float dist = distance(position, end.coords);
+
+    if (dist < min_distance)
     {
-      return &point;
+      nearest = handle_id;
+      min_distance = dist;
     }
   }
-  for (auto& handle : handles)
-  {
-    auto [start, end] = endpoints(handle);
-    if (is_hovering(cursor, end.coords, viewport))
-    {
-      return &handle;
-    }
-  }
-  return nullptr;
+
+  return std::make_pair(nearest, min_distance);
 }
 
-std::optional<Id<HalfEdge>> GradientMesh::select_edge(const Vector2& cursor)
+std::pair<Id<HalfEdge>, float> GradientMesh::nearest_edge(
+    Vector2 const& position)
 {
-  auto dist = std::numeric_limits<float>::infinity();
-  std::optional<Id<HalfEdge>> ret = std::nullopt;
-  for (const auto& patch : patches)
+  float min_distance = std::numeric_limits<float>::infinity();
+  Id<HalfEdge> nearest;
+
+  auto ids = edges.get_indirection();
+  for (auto id : ids)
   {
-    auto top = patch.side;
-    auto left = edges[top].prev;
-    auto right = edges[top].next;
-    auto bottom = edges[right].next;
+    Id<HalfEdge> edge_id = {id.id, id.version}; // Reinterpret type.
+    float dist = distance_to_curve(position, curve_matrix(edge_id));
 
-    if (!bounding_box(patch_matrix(top)).contains(QPointF(cursor.x, cursor.y)))
+    if (dist < min_distance)
     {
-      continue;
-    }
-
-    auto top_dist = distance_to_curve(cursor, curve_matrix(top));
-    auto left_dist = distance_to_curve(cursor, curve_matrix(left));
-    auto bottom_dist = distance_to_curve(cursor, curve_matrix(bottom));
-    auto right_dist = distance_to_curve(cursor, curve_matrix(right));
-    if (top_dist < dist)
-    {
-      ret = top;
-      dist = top_dist;
-    }
-    if (left_dist < dist)
-    {
-      ret = left;
-      dist = left_dist;
-    }
-    if (right_dist < dist)
-    {
-      ret = right;
-      dist = right_dist;
-    }
-    if (bottom_dist < dist)
-    {
-      ret = bottom;
-      dist = bottom_dist;
+      nearest = edge_id;
+      min_distance = dist;
     }
   }
-  return ret;
+
+  return std::make_pair(nearest, min_distance);
+}
+
+std::pair<Id<ControlPoint>, float> GradientMesh::nearest_point(
+    Vector2 const& position)
+{
+  float min_distance = std::numeric_limits<float>::infinity();
+  Id<ControlPoint> nearest;
+
+  auto ids = points.get_indirection();
+  for (auto id : ids)
+  {
+    Id<ControlPoint> point_id = {id.id, id.version}; // Reinterpret type.
+    float dist = distance(position, points[point_id].coords);
+
+    if (dist < min_distance)
+    {
+      nearest = point_id;
+      min_distance = dist;
+    }
+  }
+
+  return std::make_pair(nearest, min_distance);
 }
 
 void GradientMesh::set_position(Id<HalfEdge> edge, Vector2 pos)

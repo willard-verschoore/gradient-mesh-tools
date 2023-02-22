@@ -1,7 +1,5 @@
 #pragma once
 
-#include <QRectF>
-
 #include "hermite.hpp"
 #include "interval.hpp"
 #include "patch.hpp"
@@ -47,7 +45,8 @@ struct PatchRenderData
  * Compute the tessellation level for all of the given edges,
  * updating all segments' tessellation levels.
  */
-void tessellate_patches(std::vector<PatchRenderData>& patches,
-                        const QSizeF& window_size, const QRectF& viewport,
+void tessellate_patches(std::vector<PatchRenderData> &patches,
+                        float window_width, float window_height,
+                        float viewport_width, float viewport_height,
                         float tolerance, float max_hardware_tessellation,
                         bool account_for_color);

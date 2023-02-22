@@ -2,7 +2,6 @@
 
 #include <variant>
 
-#include "draggable.hpp"
 #include "hermite.hpp"
 #include "storage.hpp"
 
@@ -14,11 +13,9 @@ struct HalfEdge;
  * but they're internally represented in hermite form.
  * Thus, when dragging, the drag amount is first scaled to match.
  */
-struct Handle : public Draggable
+struct Handle
 {
   Handle(Interpolant tangent) : tangent(tangent) {}
-
-  void drag(const Vector2& delta) override { tangent += 3.0f * delta; }
 
   /// Tangent of the curve in Hermite form.
   /**

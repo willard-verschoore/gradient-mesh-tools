@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QRectF>
 #include <array>
 #include <map>
 #include <set>
@@ -33,23 +32,11 @@ class GradientMesh
    */
   GradientMesh(float side, const std::array<Vector3, 4>& colors);
 
-  /// Finds the draggable handle at the cursor position, if any exists.
-  /**
-   * To maintain reference integrity when splitting, this should return some
-   * sort of std::variant<Id<ControlPoint>, Id<Handle>>.
-   * For ease of implementation, since this is not needed,
-   * we instead just return a plain pointer (or nullptr)
-   * @param cursor: the cursor's position in world space.
-   * @param viewport: the viewport frustum as a world-space rectangle.
-   */
-  Draggable* select(const Vector2& cursor, const QRectF& viewport);
+  std::pair<Id<Handle>, float> nearest_handle(Vector2 const& position);
 
-  /// Finds the closest half-edge to the cursor position, if any.
-  /**
-   * If the cursor is laying outside of the any of the mesh's patches,
-   * no edge is returned.
-   */
-  std::optional<Id<HalfEdge>> select_edge(const Vector2& cursor);
+  std::pair<Id<HalfEdge>, float> nearest_edge(Vector2 const& position);
+
+  std::pair<Id<ControlPoint>, float> nearest_point(Vector2 const& position);
 
   /// Subdivides the selected patch at (t, t2)
   /**

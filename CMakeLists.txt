@@ -9,7 +9,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCE_FILES
   src/curve-matrix.cpp
-  src/draggable.cpp
   src/extrude.cpp
   src/gradient-mesh.cpp
   src/half-edge.cpp

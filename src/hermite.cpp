@@ -70,40 +70,6 @@ Interpolant mixed_derivative(const PatchMatrix& curve, float u, float v)
   return dot(dot(v_prime(u), curve), v_prime(v));
 }
 
-static QRectF corner_bounds(const PatchMatrix& patch)
-{
-  auto top_left = QPointF(patch(0, 0).coords.x, patch(0, 0).coords.y);
-  auto top_right = QPointF(patch(0, 3).coords.x, patch(0, 3).coords.y);
-  auto bottom_left = QPointF(patch(3, 0).coords.x, patch(3, 0).coords.y);
-  auto bottom_right = QPointF(patch(3, 3).coords.x, patch(3, 3).coords.y);
-
-  return QRectF(top_left, bottom_right).united(QRectF(top_right, bottom_left));
-}
-
-static QPointF handle_position(const Interpolant& hermite_deriv,
-                               const Interpolant& origin)
-{
-  Vector2 position = hermite_deriv.coords / 3.0f + origin.coords;
-  return QPointF(position.x, position.y);
-}
-
-static QRectF handle_bounds(const PatchMatrix& patch)
-{
-  auto top_left = handle_position(patch(0, 1), patch(0, 0));
-  auto top_right = handle_position(-patch(0, 2), patch(0, 3));
-  auto bottom_left = handle_position(patch(3, 1), patch(3, 0));
-  auto bottom_right = handle_position(-patch(3, 2), patch(3, 3));
-
-  return QRectF(top_left, bottom_right).united(QRectF(top_right, bottom_left));
-}
-
-QRectF bounding_box(const PatchMatrix& patch)
-{
-  return corner_bounds(patch)
-      .united(handle_bounds(patch))
-      .united(handle_bounds(patch.transposed()));
-}
-
 float distance_to_curve(const Vector2& cursor, const CurveMatrix& curve)
 {
   static constexpr std::size_t RESOLUTION = 5;

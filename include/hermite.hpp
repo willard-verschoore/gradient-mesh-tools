@@ -5,7 +5,6 @@
  *  related to cubic Hermite splines and (bicubic) patches.
  */
 
-#include <QRectF>
 #include <array>
 #include <cstdint>
 
@@ -43,8 +42,6 @@ Interpolant orthogonal_derivative(const PatchMatrix& patch, float u, float v);
 /// Evaluate the given hermite patch's mixed uv-derivative at point `(u, v)`.
 Interpolant mixed_derivative(const PatchMatrix& patch, float u, float v);
 
-/// Returns the patch's AABB as a rectangle in world space.
-QRectF bounding_box(const PatchMatrix& patch);
 /// Returns an approximation of the point's distance to the given hermite curve.
 float distance_to_curve(const Vector2& cursor, const CurveMatrix& curve);
 
