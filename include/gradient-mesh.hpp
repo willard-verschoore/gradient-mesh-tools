@@ -1,10 +1,10 @@
 #pragma once
 
 #include <QRectF>
-#include <QTextStream>
 #include <array>
 #include <map>
 #include <set>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -200,9 +200,9 @@ class GradientMesh
   bool isChild(Id<HalfEdge> edge) const;
   Interval getInterval(Id<HalfEdge> edge) const;
 
-  void open_from_cgm(QString file_name);
-  void open_from_file(QString file_name);
-  void write_to_file(QTextStream& file) const;
+  void open_from_cgm(std::string const& file_name);
+  void open_from_file(std::string const& file_name);
+  void write_to_file(std::string const& file_name) const;
 
  private:
   /// Creates a new parent half-edge with the given parameters.
