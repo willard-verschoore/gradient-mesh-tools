@@ -28,9 +28,6 @@ add_library(${PROJECT_NAME} ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
-find_package(Qt5 COMPONENTS Core Gui REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC Qt5::Core Qt5::Gui)
-
 # Set project to use standard (non-GNU) C++17.
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_EXTENSIONS OFF)
