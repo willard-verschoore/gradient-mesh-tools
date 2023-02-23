@@ -96,12 +96,12 @@ PatchMatrix &PatchMatrix::operator*=(Interpolant const &value)
 
 Interpolant &PatchMatrix::operator()(int row, int column)
 {
-  return data[row + 4 * column];
+  return data[column + 4 * row];
 }
 
 Interpolant const &PatchMatrix::operator()(int row, int column) const
 {
-  return data[row + 4 * column];
+  return data[column + 4 * row];
 }
 
 PatchMatrix PatchMatrix::transposed() const

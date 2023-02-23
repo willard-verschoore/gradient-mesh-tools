@@ -8,19 +8,19 @@ namespace hermite
 static CurveMatrix vec(float t)
 {
   CurveMatrix row{{1.0f, t, t * t, t * t * t}};
-  return dot(row, PatchMatrix::N);
+  return row * PatchMatrix::N;
 }
 
 static CurveMatrix v_prime(float t)
 {
   CurveMatrix row{{0.0f, 1.0f, 2.0f * t, 3.0f * t * t}};
-  return dot(row, PatchMatrix::N);
+  return row * PatchMatrix::N;
 }
 
 static CurveMatrix v_second(float t)
 {
   CurveMatrix row{{0.0f, 0.0f, 2.0f, 6.0f * t}};
-  return dot(row, PatchMatrix::N);
+  return row * PatchMatrix::N;
 }
 
 Interpolant interpolate(const CurveMatrix& curve, float t)
@@ -52,22 +52,22 @@ Interpolant max_second_parallel_derivative(const CurveMatrix& curve,
 
 Interpolant interpolate(const PatchMatrix& patch, float u, float v)
 {
-  return dot(dot(vec(u), patch), vec(v));
+  return dot(vec(u) * patch, vec(v));
 }
 
 Interpolant parallel_derivative(const PatchMatrix& patch, float u, float v)
 {
-  return dot(dot(vec(u), patch), v_prime(v));
+  return dot(vec(u) * patch, v_prime(v));
 }
 
 Interpolant orthogonal_derivative(const PatchMatrix& patch, float u, float v)
 {
-  return dot(dot(v_prime(u), patch), vec(v));
+  return dot(v_prime(u) * patch, vec(v));
 }
 
-Interpolant mixed_derivative(const PatchMatrix& curve, float u, float v)
+Interpolant mixed_derivative(const PatchMatrix& patch, float u, float v)
 {
-  return dot(dot(v_prime(u), curve), v_prime(v));
+  return dot(v_prime(u) * patch, v_prime(v));
 }
 
 float distance_to_curve(const Vector2& cursor, const CurveMatrix& curve)
