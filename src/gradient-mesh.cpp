@@ -73,16 +73,42 @@ std::pair<Id<HalfEdge>, float> GradientMesh::nearest_edge(
   float min_distance = std::numeric_limits<float>::infinity();
   Id<HalfEdge> nearest;
 
-  auto ids = edges.get_indirection();
-  for (auto id : ids)
+  // We only consider edges directly adjacent to patches. This way, parent edges
+  // that have been split are ignored in favour of their children.
+  for (auto const& patch : patches)
   {
-    Id<HalfEdge> edge_id = {id.id, id.version}; // Reinterpret type.
-    float dist = distance_to_curve(position, curve_matrix(edge_id));
+    auto top = patch.side;
+    auto left = edges[top].prev;
+    auto right = edges[top].next;
+    auto bottom = edges[right].next;
 
-    if (dist < min_distance)
+    float top_dist = distance_to_curve(position, curve_matrix(top));
+    float left_dist = distance_to_curve(position, curve_matrix(left));
+    float bottom_dist = distance_to_curve(position, curve_matrix(bottom));
+    float right_dist = distance_to_curve(position, curve_matrix(right));
+
+    if (top_dist < min_distance)
     {
-      nearest = edge_id;
-      min_distance = dist;
+      nearest = top;
+      min_distance = top_dist;
+    }
+
+    if (left_dist < min_distance)
+    {
+      nearest = left;
+      min_distance = left_dist;
+    }
+
+    if (right_dist < min_distance)
+    {
+      nearest = right;
+      min_distance = right_dist;
+    }
+
+    if (bottom_dist < min_distance)
+    {
+      nearest = bottom;
+      min_distance = bottom_dist;
     }
   }
 
