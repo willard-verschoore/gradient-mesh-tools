@@ -111,15 +111,35 @@ std::pair<Id<ControlPoint>, float> GradientMesh::nearest_point(
   return std::make_pair(nearest, min_distance);
 }
 
-void GradientMesh::set_position(Id<HalfEdge> edge, Vector2 pos)
+Vector2 GradientMesh::get_position(Id<ControlPoint> point)
+{
+  return points[point].coords;
+}
+
+void GradientMesh::move_point(Id<ControlPoint> point, Vector2 const& delta)
+{
+  points[point].coords += delta;
+}
+Vector2 GradientMesh::get_position(Id<Handle> handle)
+{
+  auto [start, end] = endpoints(handles[handle]);
+  return end.coords;
+}
+
+void GradientMesh::move_handle(Id<Handle> handle, Vector2 const& delta)
+{
+  handles[handle].tangent.coords += 3.0f * delta;
+}
+
+void GradientMesh::set_position(Id<HalfEdge> edge, Vector2 const& position)
 {
   auto [v1, v2] = get_control_points(edge);
   auto mid_point = 0.5 * (points[v1].coords + points[v2].coords);
   auto v1_offset = points[v1].coords - mid_point;
   auto v2_offset = points[v2].coords - mid_point;
 
-  points[v1].coords = pos + v1_offset;
-  points[v2].coords = pos + v2_offset;
+  points[v1].coords = position + v1_offset;
+  points[v2].coords = position + v2_offset;
 }
 
 Interval GradientMesh::getInterval(Id<HalfEdge> edge) const

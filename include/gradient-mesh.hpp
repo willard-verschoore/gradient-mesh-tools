@@ -102,7 +102,15 @@ class GradientMesh
 
   Id<Handle> get_handle_by_number(Id<HalfEdge> edge, int index);
 
-  void set_position(Id<HalfEdge> edge, Vector2 pos);
+  Vector2 get_position(Id<ControlPoint> point);
+
+  void move_point(Id<ControlPoint> point, Vector2 const& delta);
+
+  Vector2 get_position(Id<Handle> handle);
+
+  void move_handle(Id<Handle> handle, Vector2 const& delta);
+
+  void set_position(Id<HalfEdge> edge, Vector2 const& position);
 
   /// removes all t junctions by propagating their split along the mesh
   /**
