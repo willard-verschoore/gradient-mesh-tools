@@ -195,7 +195,6 @@ class GradientMesh
   bool isChild(Id<HalfEdge> edge) const;
   Interval getInterval(Id<HalfEdge> edge) const;
 
-  void open_from_cgm(std::string const& file_name);
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
 
