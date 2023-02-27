@@ -196,7 +196,7 @@ class GradientMesh
   Interval getInterval(Id<HalfEdge> edge) const;
 
   void open_from_cgm(std::string const& file_name);
-  void open_from_file(std::string const& file_name);
+  void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
 
  private:
@@ -433,6 +433,16 @@ class GradientMesh
    * Update the twists of edge and it's neighbour to the specified twists.
    */
   void update_twists(Id<HalfEdge> edge, std::array<Interpolant, 2> new_twists);
+
+  void read_points(std::istream& input, int num_points);
+  void read_handles(std::istream& input, int num_handles);
+  void read_patches(std::istream& input, int num_patches);
+  void read_edges(std::istream& input, int num_edges);
+
+  void write_points(std::ostream& output) const;
+  void write_handles(std::ostream& output) const;
+  void write_patches(std::ostream& output) const;
+  void write_edges(std::ostream& output) const;
 
   Storage<Handle> handles;
   Storage<HalfEdge> edges;
