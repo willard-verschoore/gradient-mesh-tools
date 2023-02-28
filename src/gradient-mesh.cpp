@@ -50,16 +50,14 @@ std::pair<Id<Handle>, float> GradientMesh::nearest_handle(
   float min_distance = std::numeric_limits<float>::infinity();
   Id<Handle> nearest;
 
-  auto ids = handles.get_indirection();
-  for (auto id : ids)
+  for (auto it = handles.begin(); it != handles.end(); ++it)
   {
-    Id<Handle> handle_id = {id.id, id.version}; // Reinterpret type.
-    auto [start, end] = endpoints(handles[handle_id]);
+    auto [start, end] = endpoints(*it);
     float dist = distance(position, end.coords);
 
     if (dist < min_distance)
     {
-      nearest = handle_id;
+      nearest = handles.get_handle(it);
       min_distance = dist;
     }
   }
@@ -73,8 +71,8 @@ std::pair<Id<HalfEdge>, float> GradientMesh::nearest_edge(
   float min_distance = std::numeric_limits<float>::infinity();
   Id<HalfEdge> nearest;
 
-  // We only consider edges directly adjacent to patches. This way, parent edges
-  // that have been split are ignored in favour of their children.
+  // We only consider edges directly adjacent to patches. This way, parent
+  // edges that have been split are ignored in favour of their children.
   for (auto const& patch : patches)
   {
     auto top = patch.side;
@@ -121,15 +119,13 @@ std::pair<Id<ControlPoint>, float> GradientMesh::nearest_point(
   float min_distance = std::numeric_limits<float>::infinity();
   Id<ControlPoint> nearest;
 
-  auto ids = points.get_indirection();
-  for (auto id : ids)
+  for (auto it = points.begin(); it != points.end(); ++it)
   {
-    Id<ControlPoint> point_id = {id.id, id.version}; // Reinterpret type.
-    float dist = distance(position, points[point_id].coords);
+    float dist = distance(position, it->coords);
 
     if (dist < min_distance)
     {
-      nearest = point_id;
+      nearest = points.get_handle(it);
       min_distance = dist;
     }
   }
