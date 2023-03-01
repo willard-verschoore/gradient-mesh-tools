@@ -227,17 +227,10 @@ std::vector<PatchRenderData> GradientMesh::patch_data() const
 {
   std::vector<PatchRenderData> ret;
   ret.reserve(patches.size());
-  for (const auto& patch : patches)
-  {
-    auto top = patch.side;
-    auto left = edges[top].prev;
-    auto right = edges[top].next;
-    auto bottom = edges[right].next;
 
-    auto boundaries = Quad<EdgeBoundary>(boundary(top), boundary(left),
-                                         boundary(bottom), boundary(right));
-    ret.emplace_back(patch_matrix(top).transposed(), boundaries);
-  }
+  for (const auto& patch : patches)
+    ret.emplace_back(patch_matrix(patch.side).transposed(), boundary(patch));
+
   return ret;
 }
 
@@ -404,6 +397,17 @@ EdgeBoundary GradientMesh::boundary(Id<HalfEdge> edge) const
 
   auto parent = eligible_parent(edge, edges);
   return EdgeBoundary{curve_matrix(parent), segments, num_siblings};
+}
+
+PatchBoundary GradientMesh::boundary(Patch const& patch) const
+{
+  Id<HalfEdge> top = patch.side;
+  Id<HalfEdge> left = edges[top].prev;
+  Id<HalfEdge> bottom = edges[left].prev;
+  Id<HalfEdge> right = edges[bottom].prev;
+
+  return PatchBoundary{boundary(top), boundary(left), boundary(bottom),
+                       boundary(right)};
 }
 
 std::array<Interpolant, 2> GradientMesh::endpoints(const Handle& handle) const

@@ -9,7 +9,6 @@
 
 #include "half-edge.hpp"
 #include "merge-options.hpp"
-#include "quad.hpp"
 #include "tessellation.hpp"
 
 inline float MAXIMUM_TWIN_SNAPPING_OFFSET = 0.001;
@@ -236,6 +235,10 @@ class GradientMesh
    * and the segments to be used with tessellation.
    */
   EdgeBoundary boundary(Id<HalfEdge> edge) const;
+
+  /// Compute the boundary information of the given patch.
+  PatchBoundary boundary(Patch const& patch) const;
+
   /// Returns the two endpoints of a handle line.
   std::array<Interpolant, 2> endpoints(const Handle& handle) const;
 

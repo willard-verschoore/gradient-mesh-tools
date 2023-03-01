@@ -23,8 +23,8 @@ static void compute_tess_levels(EdgeBoundary &boundary, float window_width,
   auto ty = tolerance / window_height;
 
   // Since color across two sides of the edge doesn't have to be contiguous,
-  // color is not taken into account when computing the tessellation level,
-  // but is instead given as a minimum tessellation level.
+  // color is not taken into account when computing the tessellation level, but
+  // is instead given as a minimum tessellation level.
   auto minimum =
       account_for_color ? std::floor(std::pow(1.0f / tolerance, 2.0f)) : 1.0f;
   float maximum = std::floor(
@@ -66,16 +66,16 @@ void tessellate_patches(std::vector<PatchRenderData> &patches,
   cull_non_visible(patches, viewport_width, viewport_height);
   for (auto &p : patches)
   {
-    compute_tess_levels(p.boundaries.top, window_width, window_height,
+    compute_tess_levels(p.boundary.top, window_width, window_height,
                         viewport_width, viewport_height, tolerance,
                         max_hardware_tessellation, account_for_color);
-    compute_tess_levels(p.boundaries.left, window_width, window_height,
+    compute_tess_levels(p.boundary.left, window_width, window_height,
                         viewport_width, viewport_height, tolerance,
                         max_hardware_tessellation, account_for_color);
-    compute_tess_levels(p.boundaries.bottom, window_width, window_height,
+    compute_tess_levels(p.boundary.bottom, window_width, window_height,
                         viewport_width, viewport_height, tolerance,
                         max_hardware_tessellation, account_for_color);
-    compute_tess_levels(p.boundaries.right, window_width, window_height,
+    compute_tess_levels(p.boundary.right, window_width, window_height,
                         viewport_width, viewport_height, tolerance,
                         max_hardware_tessellation, account_for_color);
   }
