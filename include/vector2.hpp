@@ -254,9 +254,6 @@ Vector2 subtract(Vector2 const &left, Vector2 const &right);
  */
 Vector2 subtract(Vector2 const &left, float right);
 
-// TODO: Remove, this is silly.
-Vector2 subtract(float left, Vector2 const &right);
-
 /// Returns the result of subtracting \c right from \c left.
 /**
  * @param left The Vector2D object on the left side of the subtraction.
@@ -272,9 +269,6 @@ Vector2 operator-(Vector2 const &left, Vector2 const &right);
  * @return The result of subtracting \c right from \c left.
  */
 Vector2 operator-(Vector2 const &left, float right);
-
-// TODO: Remove, this is silly.
-Vector2 operator-(float left, Vector2 const &right);
 
 /// Returns the component-wise multiplication of \c left and \c right.
 /**
@@ -338,9 +332,6 @@ Vector2 divide(Vector2 const &left, Vector2 const &right);
  */
 Vector2 divide(Vector2 const &left, float right);
 
-// TODO: Remove, this is silly.
-Vector2 divide(float left, Vector2 const &right);
-
 /// Returns the component-wise division of \c left by \c right.
 /**
  * @param left The Vector2D object on the left side of the subtraction.
@@ -356,9 +347,6 @@ Vector2 operator/(Vector2 const &left, Vector2 const &right);
  * @return The result of dividing \c left by \c right.
  */
 Vector2 operator/(Vector2 const &left, float right);
-
-// TODO: Remove, this is silly.
-Vector2 operator/(float left, Vector2 const &right);
 
 /// Returns the negation of the given vector.
 /**

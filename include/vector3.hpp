@@ -262,9 +262,6 @@ Vector3 subtract(Vector3 const &left, Vector3 const &right);
  */
 Vector3 subtract(Vector3 const &left, float right);
 
-// TODO: Remove, this is silly.
-Vector3 subtract(float left, Vector3 const &right);
-
 /// Returns the result of subtracting \c right from \c left.
 /**
  * @param left The Vector3D object on the left side of the subtraction.
@@ -280,9 +277,6 @@ Vector3 operator-(Vector3 const &left, Vector3 const &right);
  * @return The result of subtracting \c right from \c left.
  */
 Vector3 operator-(Vector3 const &left, float right);
-
-// TODO: Remove, this is silly.
-Vector3 operator-(float left, Vector3 const &right);
 
 /// Returns the component-wise multiplication of \c left and \c right.
 /**
@@ -346,9 +340,6 @@ Vector3 divide(Vector3 const &left, Vector3 const &right);
  */
 Vector3 divide(Vector3 const &left, float right);
 
-// TODO: Remove, this is silly.
-Vector3 divide(float left, Vector3 const &right);
-
 /// Returns the component-wise division of \c left by \c right.
 /**
  * @param left The Vector3D object on the left side of the subtraction.
@@ -364,9 +355,6 @@ Vector3 operator/(Vector3 const &left, Vector3 const &right);
  * @return The result of dividing \c left by \c right.
  */
 Vector3 operator/(Vector3 const &left, float right);
-
-// TODO: Remove, this is silly.
-Vector3 operator/(float left, Vector3 const &right);
 
 /// Returns the negation of the given vector.
 /**

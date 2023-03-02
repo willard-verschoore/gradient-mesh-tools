@@ -85,23 +85,12 @@ Vector3 subtract(Vector3 const &left, float right)
   return copy.subtract(right);
 }
 
-Vector3 subtract(float left, Vector3 const &right)
-{
-  Vector3 copy{right};
-  return copy.subtract(left);
-}
-
 Vector3 operator-(Vector3 const &left, Vector3 const &right)
 {
   return subtract(left, right);
 }
 
 Vector3 operator-(Vector3 const &left, float right)
-{
-  return subtract(left, right);
-}
-
-Vector3 operator-(float left, Vector3 const &right)
 {
   return subtract(left, right);
 }
@@ -197,23 +186,12 @@ Vector3 divide(Vector3 const &left, float right)
   return copy.divide(right);
 }
 
-Vector3 divide(float left, Vector3 const &right)
-{
-  Vector3 copy{right};
-  return copy.divide(left);
-}
-
 Vector3 operator/(Vector3 const &left, Vector3 const &right)
 {
   return divide(left, right);
 }
 
 Vector3 operator/(Vector3 const &left, float right)
-{
-  return divide(left, right);
-}
-
-Vector3 operator/(float left, Vector3 const &right)
 {
   return divide(left, right);
 }
