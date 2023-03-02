@@ -8,20 +8,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SOURCE_FILES
-  src/hermite/curve-matrix.cpp
-  src/hermite/hermite.cpp
-  src/hermite/interpolant.cpp
-  src/hermite/patch-matrix.cpp
-  src/hermite/vector2.cpp
-  src/hermite/vector3.cpp
-  src/extrude.cpp
-  src/gradient-mesh.cpp
-  src/half-edge.cpp
-  src/io.cpp
-  src/merge-conditions.cpp
-  src/merging.cpp
-  src/splitting.cpp
-  src/tessellation.cpp
+  src/gmt/hermite/curve-matrix.cpp
+  src/gmt/hermite/hermite.cpp
+  src/gmt/hermite/interpolant.cpp
+  src/gmt/hermite/patch-matrix.cpp
+  src/gmt/hermite/vector2.cpp
+  src/gmt/hermite/vector3.cpp
+  src/gmt/extrude.cpp
+  src/gmt/gradient-mesh.cpp
+  src/gmt/half-edge.cpp
+  src/gmt/io.cpp
+  src/gmt/merge-conditions.cpp
+  src/gmt/merging.cpp
+  src/gmt/splitting.cpp
+  src/gmt/tessellation.cpp
 )
 
 add_library(${PROJECT_NAME} ${SOURCE_FILES})
