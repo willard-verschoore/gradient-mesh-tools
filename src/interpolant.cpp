@@ -61,9 +61,9 @@ Interpolant& operator-=(Interpolant& left, const Interpolant& right)
 bool is_zero(const Interpolant& i, float coords_epsilon, float color_epsilon)
 {
   for (int k = 0; k < 2; ++k)
-    if (abs(i.coords[k]) > coords_epsilon) return false;
+    if (std::abs(i.coords[k]) > coords_epsilon) return false;
   for (int k = 0; k < 3; ++k)
-    if (abs(i.color[k]) > color_epsilon) return false;
+    if (std::abs(i.color[k]) > color_epsilon) return false;
   return true;
 }
 

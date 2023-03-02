@@ -364,7 +364,7 @@ void GradientMesh::snap_to_twin(Id<HalfEdge> edge)
 
   // Don't snap when there is an offset between the edge and its twin.
   auto offset = (edge_it->first - (1.0f - twin_it->first));
-  if (abs(offset) > MAXIMUM_TWIN_SNAPPING_OFFSET)
+  if (std::abs(offset) > MAXIMUM_TWIN_SNAPPING_OFFSET)
   {
     return;
   }
