@@ -5,6 +5,9 @@
 #include "vector2.hpp"
 #include "vector3.hpp"
 
+namespace hermite
+{
+
 /// A tuple of (coordinates, color), acting as a 5D vector.
 /**
  * A single element of a patch's control matrix,
@@ -98,3 +101,5 @@ inline Interpolant operator-(Interpolant left, const Interpolant& right)
 bool is_zero(const Interpolant& i, float coords_epsilon, float color_epsilon);
 /// The 'length' of the 5D vector of an Interpolant.
 float length(const Interpolant& i);
+
+} // namespace hermite

@@ -1,4 +1,7 @@
-#include "interpolant.hpp"
+#include "hermite/interpolant.hpp"
+
+namespace hermite
+{
 
 float& Interpolant::operator[](int index)
 {
@@ -73,3 +76,5 @@ float length(const Interpolant& i)
   for (int k = 0; k < i.COMPONENTS; ++k) size += pow(i[k], 2);
   return sqrt(size);
 }
+
+} // namespace hermite

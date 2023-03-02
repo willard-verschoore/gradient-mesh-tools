@@ -7,6 +7,25 @@
 
 using namespace hermite;
 
+/**
+ * Returns a vector containing the maximum absolute value of the curve's second
+ * derivative for each component.
+ * @param curve: the matrix describing the given curve.
+ * @param interval: the interval in [0, 1] over which the maximum interval
+ * should be computed. [0, 1] is  the default.
+ */
+static Interpolant max_second_parallel_derivative(const CurveMatrix &curve,
+                                                  const Interval &interval)
+{
+  // Since second derivative is linear, the maximum and minimum values will be
+  // at the endpoints.
+  auto min = second_parallel_derivative(curve, interval.start);
+  auto max = second_parallel_derivative(curve, interval.end);
+  for (int i = 0; i < Interpolant::COMPONENTS; ++i)
+    max[i] = std::max(std::abs(min[i]), std::abs(max[i]));
+  return max * length(interval);
+}
+
 static float sample_distance(float max_deriv, float tolerance,
                              float view_length)
 {

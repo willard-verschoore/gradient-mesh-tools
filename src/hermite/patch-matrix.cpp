@@ -1,4 +1,4 @@
-#include "patch-matrix.hpp"
+#include "hermite/patch-matrix.hpp"
 
 #include <cstring>
 

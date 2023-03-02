@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hermite.hpp"
+#include "hermite/hermite.hpp"
 #include "interval.hpp"
 #include "patch.hpp"
 

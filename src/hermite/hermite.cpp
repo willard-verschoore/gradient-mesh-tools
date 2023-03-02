@@ -1,4 +1,4 @@
-#include "hermite.hpp"
+#include "hermite/hermite.hpp"
 
 #include <algorithm>
 
@@ -36,18 +36,6 @@ Interpolant parallel_derivative(const CurveMatrix& curve, float t)
 Interpolant second_parallel_derivative(const CurveMatrix& curve, float t)
 {
   return dot(curve, v_second(t));
-}
-
-Interpolant max_second_parallel_derivative(const CurveMatrix& curve,
-                                           const Interval& interval)
-{
-  // Since second derivative is linear, the maximum and minimum values will be
-  // at the endpoints.
-  auto min = second_parallel_derivative(curve, interval.start);
-  auto max = second_parallel_derivative(curve, interval.end);
-  for (int i = 0; i < Interpolant::COMPONENTS; ++i)
-    max[i] = std::max(std::abs(min[i]), std::abs(max[i]));
-  return max * length(interval);
 }
 
 Interpolant interpolate(const PatchMatrix& patch, float u, float v)

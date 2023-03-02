@@ -6,7 +6,7 @@
 
 #include "control-point.hpp"
 #include "handle.hpp"
-#include "hermite.hpp"
+#include "hermite/hermite.hpp"
 #include "interval.hpp"
 #include "patch.hpp"
 
@@ -55,7 +55,8 @@ struct HalfEdge
 {
   /// Creates a parent half-edge with the given parameters.
   HalfEdge(Id<ControlPoint> origin, std::array<Id<Handle>, 2> handles,
-           Vector3 color, Interpolant twist = Interpolant(0.0f),
+           hermite::Vector3 color,
+           hermite::Interpolant twist = hermite::Interpolant(0.0f),
            std::optional<Id<HalfEdge>> twin = std::nullopt)
       : kind(Parent{origin, handles}), color(color), twist(twist), twin(twin)
   {
@@ -63,8 +64,9 @@ struct HalfEdge
 
   /// Creates a child half-edge with the given parameters.
   HalfEdge(Id<HalfEdge> parent, Interval interval,
-           std::optional<std::array<Id<Handle>, 2>> handles, Vector3 color,
-           Interpolant twist = Interpolant(0.0f),
+           std::optional<std::array<Id<Handle>, 2>> handles,
+           hermite::Vector3 color,
+           hermite::Interpolant twist = hermite::Interpolant(0.0f),
            std::optional<Id<HalfEdge>> twin = std::nullopt)
       : kind(Child{parent, interval, handles}),
         color(color),
@@ -114,13 +116,13 @@ struct HalfEdge
    * The color at the origin, stored in the half-edge
    * to enable sharp transitions.
    */
-  Vector3 color;
+  hermite::Vector3 color;
   /// Twist vector at the origin point.
   /**
    * Should normally be 0,
    * but can be changed by splitting.
    */
-  Interpolant twist = Interpolant(0.0f);
+  hermite::Interpolant twist = hermite::Interpolant(0.0f);
   /// Twin half-edge in the adjacent patch.
   /**
    * A half-edge may or may not have an opposite (twin) edge,

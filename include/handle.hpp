@@ -2,7 +2,7 @@
 
 #include <variant>
 
-#include "hermite.hpp"
+#include "hermite/hermite.hpp"
 #include "storage.hpp"
 
 struct HalfEdge;
@@ -15,7 +15,7 @@ struct HalfEdge;
  */
 struct Handle
 {
-  Handle(Interpolant tangent) : tangent(tangent) {}
+  Handle(hermite::Interpolant tangent) : tangent(tangent) {}
 
   /// Tangent of the curve in Hermite form.
   /**
@@ -25,7 +25,7 @@ struct Handle
    * This is to make sure that opposite half-edges are
    * completely symmetric between each other.
    */
-  Interpolant tangent;
+  hermite::Interpolant tangent;
   /// Back-reference to the edge owning this handle.
   Id<HalfEdge> edge;
 };

@@ -5,6 +5,8 @@
 
 #include "gradient-mesh.hpp"
 
+using namespace hermite;
+
 Id<ControlPoint> GradientMesh::get_origin(Id<HalfEdge> edge)
 {
   Id<ControlPoint> origin;

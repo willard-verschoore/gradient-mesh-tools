@@ -3,6 +3,8 @@
 
 #include "gradient-mesh.hpp"
 
+using namespace hermite;
+
 static void read_header(std::istream &input, int &num_points, int &num_handles,
                         int &num_patches, int &num_edges)
 {

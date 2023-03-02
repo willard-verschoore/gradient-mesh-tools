@@ -29,13 +29,14 @@ class GradientMesh
    * @param colors: The color of the square's four corners,
    *    in the order (top left, top right, bottom right, bottom left).
    */
-  GradientMesh(float side, const std::array<Vector3, 4>& colors);
+  GradientMesh(float side, const std::array<hermite::Vector3, 4>& colors);
 
-  std::pair<Id<Handle>, float> nearest_handle(Vector2 const& position);
+  std::pair<Id<Handle>, float> nearest_handle(hermite::Vector2 const& position);
 
-  std::pair<Id<HalfEdge>, float> nearest_edge(Vector2 const& position);
+  std::pair<Id<HalfEdge>, float> nearest_edge(hermite::Vector2 const& position);
 
-  std::pair<Id<ControlPoint>, float> nearest_point(Vector2 const& position);
+  std::pair<Id<ControlPoint>, float> nearest_point(
+      hermite::Vector2 const& position);
 
   /// Subdivides the selected patch at (t, t2)
   /**
@@ -101,15 +102,15 @@ class GradientMesh
 
   Id<Handle> get_handle_by_number(Id<HalfEdge> edge, int index);
 
-  Vector2 get_position(Id<ControlPoint> point);
+  hermite::Vector2 get_position(Id<ControlPoint> point);
 
-  void move_point(Id<ControlPoint> point, Vector2 const& delta);
+  void move_point(Id<ControlPoint> point, hermite::Vector2 const& delta);
 
-  Vector2 get_position(Id<Handle> handle);
+  hermite::Vector2 get_position(Id<Handle> handle);
 
-  void move_handle(Id<Handle> handle, Vector2 const& delta);
+  void move_handle(Id<Handle> handle, hermite::Vector2 const& delta);
 
-  void set_position(Id<HalfEdge> edge, Vector2 const& position);
+  void set_position(Id<HalfEdge> edge, hermite::Vector2 const& position);
 
   /// removes all t junctions by propagating their split along the mesh
   /**
@@ -142,8 +143,8 @@ class GradientMesh
    */
   Id<HalfEdge> split(Id<HalfEdge> top_edge, float t);
   /// Sets a half-edge's color at the origin.
-  void set_color(Id<HalfEdge> edge, Vector3 color);
-  void set_color_vertex(Id<HalfEdge> edge, Vector3 color);
+  void set_color(Id<HalfEdge> edge, hermite::Vector3 color);
+  void set_color_vertex(Id<HalfEdge> edge, hermite::Vector3 color);
   /// Returns the hermite vector of the given edge.
   hermite::CurveMatrix curve_matrix(Id<HalfEdge> edge) const;
   /**
@@ -178,13 +179,13 @@ class GradientMesh
   /// Returns a vector of all of the mesh's patches.
   std::vector<PatchRenderData> patch_data() const;
   /// Returns a vector of all of the mesh's control points.
-  std::vector<Interpolant> point_data() const;
+  std::vector<hermite::Interpolant> point_data() const;
   /// Returns a vector of all of the mesh's tangent handles.
   /**
    * The handles are returned as an array of (start, end),
    * since tangent handles are rendered (also) as line segments.
    */
-  std::vector<std::array<Interpolant, 2>> handle_data() const;
+  std::vector<std::array<hermite::Interpolant, 2>> handle_data() const;
   /// Returns a vector of all of the mesh's boundary curves.
   std::vector<hermite::CurveMatrix> curve_data() const;
 
@@ -204,8 +205,9 @@ class GradientMesh
    * to the returned half-edge.
    */
   Id<HalfEdge> half_edge(Id<ControlPoint> origin,
-                         std::array<Id<Handle>, 2> handles, Vector3 color,
-                         Interpolant twist = {},
+                         std::array<Id<Handle>, 2> handles,
+                         hermite::Vector3 color,
+                         hermite::Interpolant twist = {},
                          std::optional<Id<HalfEdge>> twin = std::nullopt);
   /// Creates a new child half-edge with the given parameters.
   /**
@@ -214,7 +216,8 @@ class GradientMesh
    */
   Id<HalfEdge> half_edge(Id<HalfEdge> parent, Interval interval,
                          std::optional<std::array<Id<Handle>, 2>> handles,
-                         Vector3 color, Interpolant twist = {},
+                         hermite::Vector3 color,
+                         hermite::Interpolant twist = {},
                          std::optional<Id<HalfEdge>> twin = std::nullopt);
 
   /// Establishes the neighbor relationship between a and b.
@@ -228,7 +231,7 @@ class GradientMesh
    * Returns the four interpolants of a half-edge,
    * in the order `[m0, m0uv, m0v, m1v]`.
    */
-  std::array<Interpolant, 4> edge_tangents(Id<HalfEdge> edge) const;
+  std::array<hermite::Interpolant, 4> edge_tangents(Id<HalfEdge> edge) const;
   /// Compute the boundary information of the given edge.
   /**
    * Boundary information includes the parent curve
@@ -240,7 +243,7 @@ class GradientMesh
   PatchBoundary boundary(Patch const& patch) const;
 
   /// Returns the two endpoints of a handle line.
-  std::array<Interpolant, 2> endpoints(const Handle& handle) const;
+  std::array<hermite::Interpolant, 2> endpoints(const Handle& handle) const;
 
   //=========================================================================
   // The following functions are related to splitting,
@@ -267,14 +270,14 @@ class GradientMesh
    * in the order [left, middle, right].
    */
   std::array<Id<HalfEdge>, 3> junction(Id<HalfEdge> edge, float t,
-                                       Interpolant twist,
+                                       hermite::Interpolant twist,
                                        std::array<Id<Handle>, 2> ortho_handles);
   /**
    * Creates a "connected" junction (where the mid half-edge is connected to a
    * control point) from the given parameters.
    */
   std::array<Id<HalfEdge>, 3> connected_junction(
-      Id<HalfEdge> edge, float t, Interpolant twist,
+      Id<HalfEdge> edge, float t, hermite::Interpolant twist,
       std::array<Id<Handle>, 2> ortho_handles);
 
   /**
@@ -282,7 +285,7 @@ class GradientMesh
    * at parameter value t along the given edge.
    */
   std::array<Id<HalfEdge>, 3> t_junction(
-      Id<HalfEdge> edge, float t, Interpolant twist,
+      Id<HalfEdge> edge, float t, hermite::Interpolant twist,
       std::array<Id<Handle>, 2> ortho_handles);
 
   /**
@@ -297,8 +300,9 @@ class GradientMesh
    * compared to `connected_junction.`
    */
   std::array<Id<HalfEdge>, 2> parent_junction(
-      Id<HalfEdge> edge, float t, Id<ControlPoint> mid_point, Vector3 color,
-      Interpolant twist, std::array<Id<Handle>, 2> parallel_handles);
+      Id<HalfEdge> edge, float t, Id<ControlPoint> mid_point,
+      hermite::Vector3 color, hermite::Interpolant twist,
+      std::array<Id<Handle>, 2> parallel_handles);
 
   /**
    * Reparents all edges in the range [begin, end) to `parent`, and adjusts
@@ -434,7 +438,8 @@ class GradientMesh
   /**
    * Update the twists of edge and it's neighbour to the specified twists.
    */
-  void update_twists(Id<HalfEdge> edge, std::array<Interpolant, 2> new_twists);
+  void update_twists(Id<HalfEdge> edge,
+                     std::array<hermite::Interpolant, 2> new_twists);
 
   void read_points(std::istream& input, int num_points);
   void read_handles(std::istream& input, int num_handles);

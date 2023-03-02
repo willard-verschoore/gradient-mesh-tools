@@ -2,17 +2,19 @@
 
 #include "gradient-mesh.hpp"
 
+using namespace hermite;
+
 /**
  * Calculates the original patch control matrix in hermite form,
  * based on the left patch and the splitting value `t`.
  */
-inline hermite::PatchMatrix parent_left(hermite::PatchMatrix left, float t)
+inline PatchMatrix parent_left(PatchMatrix left, float t)
 {
-  auto mat = hermite::PatchMatrix{{1.0f, 0.0f, 0.0f, 0.0f,             //
-                                   0.0f, 1.0f / t, 0.0f, 0.0f,         //
-                                   0.0f, 0.0f, 1.0f / pow(t, 2), 0.0f, //
-                                   0.0f, 0.0f, 0.0f, 1.0f / pow(t, 3)}};
-  auto s_Linv = hermite::PatchMatrix::N_INV * mat * hermite::PatchMatrix::N;
+  auto mat = PatchMatrix{{1.0f, 0.0f, 0.0f, 0.0f,             //
+                          0.0f, 1.0f / t, 0.0f, 0.0f,         //
+                          0.0f, 0.0f, 1.0f / pow(t, 2), 0.0f, //
+                          0.0f, 0.0f, 0.0f, 1.0f / pow(t, 3)}};
+  auto s_Linv = PatchMatrix::N_INV * mat * PatchMatrix::N;
   return left * s_Linv.transposed();
 }
 
@@ -20,28 +22,27 @@ inline hermite::PatchMatrix parent_left(hermite::PatchMatrix left, float t)
  * Calculates the control matrix of the original patch in hermite form,
  * based on the right patch and the splitting value `t`.
  */
-inline hermite::PatchMatrix parent_right(hermite::PatchMatrix right, float t)
+inline PatchMatrix parent_right(PatchMatrix right, float t)
 {
   auto t2 = t * t;
   auto t3 = t2 * t;
   auto tf = 1.0f - t;
   auto tf2 = pow(tf, 2);
   auto tf3 = pow(tf, 3);
-  auto mat =
-      hermite::PatchMatrix{{1.0f, -t / tf, t2 / tf2, -t3 / tf3,          //
-                            0.0f, 1.0f / tf, -2 * t / tf2, 3 * t2 / tf3, //
-                            0.0f, 0.0f, 1.0f / tf2, -3 * t / tf3,        //
-                            0.0f, 0.0f, 0.0f, 1.0f / tf3}};
-  auto s_Rinv = hermite::PatchMatrix::N_INV * mat * hermite::PatchMatrix::N;
+  auto mat = PatchMatrix{{1.0f, -t / tf, t2 / tf2, -t3 / tf3,          //
+                          0.0f, 1.0f / tf, -2 * t / tf2, 3 * t2 / tf3, //
+                          0.0f, 0.0f, 1.0f / tf2, -3 * t / tf3,        //
+                          0.0f, 0.0f, 0.0f, 1.0f / tf3}};
+  auto s_Rinv = PatchMatrix::N_INV * mat * PatchMatrix::N;
   return right * s_Rinv.transposed();
 }
 
 /**
  * Return the specified CurveMatrix, but flipped.
  */
-inline hermite::CurveMatrix flip(hermite::CurveMatrix curve)
+inline CurveMatrix flip(CurveMatrix curve)
 {
-  return hermite::CurveMatrix{{curve[3], -curve[2], -curve[1], curve[0]}};
+  return CurveMatrix{{curve[3], -curve[2], -curve[1], curve[0]}};
 }
 
 // Simple implementation, multiple iterations are necessary.
@@ -120,14 +121,13 @@ void GradientMesh::merge_neighbours(Id<HalfEdge> separator_edge)
   // Handle inside edges
   auto [top_left_child, top_left_parent, top_orthogonal,
         top_orthogonal_origin] =
-      merge_inside(top_left, top_right, hermite::CurveMatrix(hermite_parent, 0),
+      merge_inside(top_left, top_right, CurveMatrix(hermite_parent, 0),
                    relative_top_left_length, relative_top_adjacent_length);
   auto [bottom_right_child, bottom_right_parent, bottom_orthogonal,
         bottom_orthogonal_origin] =
-      merge_inside(bottom_right, bottom_left,
-                   flip(hermite::CurveMatrix(hermite_parent, 3)),
-                   relative_bottom_left_length,
-                   relative_bottom_adjacent_length);
+      merge_inside(
+          bottom_right, bottom_left, flip(CurveMatrix(hermite_parent, 3)),
+          relative_bottom_left_length, relative_bottom_adjacent_length);
 
   // Simplify edges
   top_left = merge_parent_with_child(top_left_child);
@@ -181,8 +181,7 @@ void GradientMesh::merge_neighbours(Id<HalfEdge> separator_edge)
   patches.remove(patch_right);
 }
 
-hermite::PatchMatrix GradientMesh::parent(hermite::PatchMatrix left,
-                                          hermite::PatchMatrix right, float t)
+PatchMatrix GradientMesh::parent(PatchMatrix left, PatchMatrix right, float t)
 {
   auto mat = parent_left(left, t) + parent_right(right, t);
   mat *= 0.5;
@@ -240,8 +239,7 @@ std::optional<Id<HalfEdge>> GradientMesh::merge_outside(
 std::tuple<Id<HalfEdge>, Id<HalfEdge>, Id<HalfEdge>,
            std::optional<Id<ControlPoint>>>
 GradientMesh::merge_inside(Id<HalfEdge> left, Id<HalfEdge> adjacent,
-                           hermite::CurveMatrix edge_row,
-                           float relative_left_length,
+                           CurveMatrix edge_row, float relative_left_length,
                            float relative_adjacent_length)
 {
   auto [left_parent, left_child] = parent_child(left);
@@ -262,12 +260,12 @@ GradientMesh::merge_inside(Id<HalfEdge> left, Id<HalfEdge> adjacent,
     auto new_patch_start = edges[left_child].relative_interval().start;
     auto new_patch_end = edges[adjacent_child].relative_interval().end;
     auto new_patch_length = new_patch_end - new_patch_start;
-    auto left_handle = hermite::parallel_derivative(
-                           edge_row, -new_patch_start / new_patch_length) /
-                       new_patch_length;
+    auto left_handle =
+        parallel_derivative(edge_row, -new_patch_start / new_patch_length) /
+        new_patch_length;
     auto adjacent_handle =
-        hermite::parallel_derivative(
-            edge_row, 1.0f + (1.0f - new_patch_end) / new_patch_length) /
+        parallel_derivative(edge_row,
+                            1.0f + (1.0f - new_patch_end) / new_patch_length) /
         new_patch_length;
     auto next = edges[left_parent].next;
     auto h = edges[left_parent].handles();

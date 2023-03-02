@@ -10,8 +10,9 @@
 
 #include "curve-matrix.hpp"
 #include "interpolant.hpp"
-#include "interval.hpp"
 #include "patch-matrix.hpp"
+#include "vector2.hpp"
+#include "vector3.hpp"
 
 namespace hermite
 {
@@ -22,17 +23,6 @@ Interpolant interpolate(const CurveMatrix& curve, float t);
 Interpolant parallel_derivative(const CurveMatrix& curve, float t);
 /// Evaluate the given hermite curve's second derivative at point `t`.
 Interpolant second_parallel_derivative(const CurveMatrix& curve, float t);
-/**
- * Returns a vector containing the maximum absolute value
- * of the curve's second derivative for each component.
- * @param curve: the matrix describing the given curve.
- * @param interval: the interval in [0, 1] over which the maximum interval
- *      should be computed. [0, 1] is  the default.
- */
-Interpolant max_second_parallel_derivative(const CurveMatrix& curve,
-                                           const Interval& interval = {0.0f,
-                                                                       1.0f});
-
 /// Evaluate the given hermite patch at point `(u, v)`.
 Interpolant interpolate(const PatchMatrix& patch, float u, float v);
 /// Evaluate the given hermite patch's partial v-derivative at point `(u, v)`.

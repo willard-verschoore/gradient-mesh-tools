@@ -1,6 +1,9 @@
-#include "vector2.hpp"
+#include "hermite/vector2.hpp"
 
 #include <cmath>
+
+namespace hermite
+{
 
 Vector2 &Vector2::add(Vector2 const &other)
 {
@@ -237,3 +240,5 @@ std::ostream &operator<<(std::ostream &stream, Vector2 const &vector)
 {
   return stream << "(" << vector.x << ", " << vector.y << ")";
 }
+
+} // namespace hermite

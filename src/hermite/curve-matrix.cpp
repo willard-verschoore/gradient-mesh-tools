@@ -1,4 +1,4 @@
-#include "curve-matrix.hpp"
+#include "hermite/curve-matrix.hpp"
 
 namespace hermite
 {
