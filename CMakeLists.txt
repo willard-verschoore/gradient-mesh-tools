@@ -50,6 +50,10 @@ target_compile_options(${PROJECT_NAME} PUBLIC
   >
 )
 
+# Enable unit tests and point CMake to the directory containing them.
+enable_testing()
+add_subdirectory(tests EXCLUDE_FROM_ALL)
+
 # Generate documentation with Doxygen.
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
