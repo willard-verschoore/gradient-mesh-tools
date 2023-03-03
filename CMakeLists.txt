@@ -49,3 +49,16 @@ target_compile_options(${PROJECT_NAME} PUBLIC
   /W4
   >
 )
+
+# Generate documentation with Doxygen.
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+  set(DOXYGEN_GENERATE_HTML YES)
+  set(DOXYGEN_GENERATE_LATEX YES)
+  set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/docs/")
+  doxygen_add_docs(
+    docs
+    ${PROJECT_SOURCE_DIR}
+    COMMENT "Generate Doxygen documentation"
+  )
+endif()
