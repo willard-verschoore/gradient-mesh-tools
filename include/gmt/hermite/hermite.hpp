@@ -17,6 +17,56 @@
 namespace gmt::hermite
 {
 
+/// Returns the matrix multiplication of \c curve and \c patch.
+/**
+ * Performs the matrix multiplication \c curve * \c patch where \c curve is 1x4
+ * and \c patch is 4x4. This means that \c curve is interpreted as a row vector.
+ *
+ * @param curve The CurveMatrix object to multiply.
+ * @param patch The PatchMatrix object to multiply.
+ * @return The CurveMatrix resulting from matrix multiplication of \c curve and
+ * \c patch.
+ */
+CurveMatrix multiply(CurveMatrix const& curve, PatchMatrix const& patch);
+
+/// Returns the matrix multiplication of \c patch and \c curve.
+/**
+ * Performs the matrix multiplication \c patch * \c curve where \c patch is 4x4
+ * and \c curve is 4x1. This means that \c curve is interpreted as a column
+ * vector.
+ *
+ * @param patch The PatchMatrix object to multiply.
+ * @param curve The CurveMatrix object to multiply.
+ * @return The CurveMatrix resulting from matrix multiplication of \c patch and
+ * \c curve.
+ */
+CurveMatrix multiply(PatchMatrix const& patch, CurveMatrix const& curve);
+
+/// Returns the matrix multiplication of \c curve and \c patch.
+/**
+ * Performs the matrix multiplication \c curve * \c patch where \c curve is 1x4
+ * and \c patch is 4x4. This means that \c curve is interpreted as a row vector.
+ *
+ * @param curve The CurveMatrix object to multiply.
+ * @param patch The PatchMatrix object to multiply.
+ * @return The CurveMatrix resulting from matrix multiplication of \c curve and
+ * \c patch.
+ */
+CurveMatrix operator*(CurveMatrix const& curve, PatchMatrix const& patch);
+
+/// Returns the matrix multiplication of \c patch and \c curve.
+/**
+ * Performs the matrix multiplication \c patch * \c curve where \c patch is 4x4
+ * and \c curve is 4x1. This means that \c curve is interpreted as a column
+ * vector.
+ *
+ * @param patch The PatchMatrix object to multiply.
+ * @param curve The CurveMatrix object to multiply.
+ * @return The CurveMatrix resulting from matrix multiplication of \c patch and
+ * \c curve.
+ */
+CurveMatrix operator*(PatchMatrix const& patch, CurveMatrix const& curve);
+
 /// Evaluate the given hermite curve at point `t`.
 Interpolant interpolate(const CurveMatrix& curve, float t);
 /// Evaluate the given hermite curve's first derivative at point `t`.

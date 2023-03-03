@@ -21,47 +21,4 @@ Interpolant dot(CurveMatrix const &left, CurveMatrix const &right)
          left[3] * right[3];
 }
 
-CurveMatrix multiply(CurveMatrix const &curve, PatchMatrix const &patch)
-{
-  CurveMatrix result;
-  result[0] = curve[0] * patch(0, 0) + curve[1] * patch(1, 0) +
-              curve[2] * patch(2, 0) + curve[3] * patch(3, 0);
-  result[1] = curve[0] * patch(0, 1) + curve[1] * patch(1, 1) +
-              curve[2] * patch(2, 1) + curve[3] * patch(3, 1);
-  result[2] = curve[0] * patch(0, 2) + curve[1] * patch(1, 2) +
-              curve[2] * patch(2, 2) + curve[3] * patch(3, 2);
-  result[3] = curve[0] * patch(0, 3) + curve[1] * patch(1, 3) +
-              curve[2] * patch(2, 3) + curve[3] * patch(3, 3);
-  return result;
-}
-
-CurveMatrix multiply(PatchMatrix const &patch, CurveMatrix const &curve)
-{
-  CurveMatrix result;
-  result[0] = curve[0] * patch(0, 0) + curve[1] * patch(0, 1) +
-              curve[2] * patch(0, 2) + curve[3] * patch(0, 3);
-  result[1] = curve[0] * patch(1, 0) + curve[1] * patch(1, 1) +
-              curve[2] * patch(1, 2) + curve[3] * patch(1, 3);
-  result[2] = curve[0] * patch(2, 0) + curve[1] * patch(2, 1) +
-              curve[2] * patch(2, 2) + curve[3] * patch(2, 3);
-  result[3] = curve[0] * patch(3, 0) + curve[1] * patch(3, 1) +
-              curve[2] * patch(3, 2) + curve[3] * patch(3, 3);
-  return result;
-}
-
-Interpolant operator*(CurveMatrix const &left, CurveMatrix const &right)
-{
-  return dot(left, right);
-}
-
-CurveMatrix operator*(CurveMatrix const &curve, PatchMatrix const &patch)
-{
-  return multiply(curve, patch);
-}
-
-CurveMatrix operator*(PatchMatrix const &patch, CurveMatrix const &curve)
-{
-  return multiply(patch, curve);
-}
-
 } // namespace gmt::hermite
