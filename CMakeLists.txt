@@ -14,6 +14,7 @@ set(SOURCE_FILES
   src/gmt/hermite/patch-matrix.cpp
   src/gmt/hermite/vector2.cpp
   src/gmt/hermite/vector3.cpp
+  src/gmt/decompose.cpp
   src/gmt/extrude.cpp
   src/gmt/gradient-mesh.cpp
   src/gmt/half-edge.cpp
@@ -49,6 +50,13 @@ target_compile_options(${PROJECT_NAME} PUBLIC
   /W4
   >
 )
+
+# Path to project root. Useful for loading Python scripts.
+add_compile_definitions(GMT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+
+# Find Python for mesh recoloring.
+find_package(Python3 COMPONENTS Development NumPy REQUIRED)
+target_link_libraries(${PROJECT_NAME} Python3::Python Python3::NumPy)
 
 # Enable unit tests and point CMake to the directory containing them.
 enable_testing()

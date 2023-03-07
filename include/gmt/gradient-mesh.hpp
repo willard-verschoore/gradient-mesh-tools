@@ -454,6 +454,15 @@ class GradientMesh
   void write_patches(std::ostream& output) const;
   void write_edges(std::ostream& output) const;
 
+  std::vector<float> rgb_data() const;
+  std::vector<float> rgbxy_data() const;
+
+  std::vector<hermite::Vector3> get_palette() const;
+  std::vector<hermite::Vector3> get_recolored(
+      std::vector<hermite::Vector3> palette) const; // TODO: get_weights.
+
+  void recolor(std::vector<hermite::Vector3> rgb);
+
   Storage<Handle> handles;
   Storage<HalfEdge> edges;
   Storage<Patch> patches;
