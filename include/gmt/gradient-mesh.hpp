@@ -201,6 +201,12 @@ class GradientMesh
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
 
+  std::vector<hermite::Vector3> get_palette() const;
+  std::vector<hermite::Vector3> get_recolored(
+      std::vector<hermite::Vector3> palette) const; // TODO: get_weights.
+
+  void recolor(std::vector<hermite::Vector3> rgb);
+
  private:
   /// Creates a new parent half-edge with the given parameters.
   /**
@@ -456,12 +462,6 @@ class GradientMesh
 
   std::vector<float> rgb_data() const;
   std::vector<float> rgbxy_data() const;
-
-  std::vector<hermite::Vector3> get_palette() const;
-  std::vector<hermite::Vector3> get_recolored(
-      std::vector<hermite::Vector3> palette) const; // TODO: get_weights.
-
-  void recolor(std::vector<hermite::Vector3> rgb);
 
   Storage<Handle> handles;
   Storage<HalfEdge> edges;
