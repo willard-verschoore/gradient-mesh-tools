@@ -172,7 +172,7 @@ std::vector<Vector3> GradientMesh::get_recolored(
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, dims, NPY_FLOAT, reinterpret_cast<void *>(rgbxy.data())));
 
-  npy_intp p_dims[2]{5, 3};
+  npy_intp p_dims[2]{(npy_intp)palette.size(), 3};
   PyArrayObject *np_palette =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, p_dims, NPY_FLOAT, reinterpret_cast<void *>(palette.data())));
