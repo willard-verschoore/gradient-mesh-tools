@@ -85,10 +85,10 @@ std::vector<Vector3> GradientMesh::get_palette() const
     return palette;
   }
 
-  function = PyObject_GetAttrString(module, "decompose");
+  function = PyObject_GetAttrString(module, "get_palette");
   if (function == NULL || !PyCallable_Check(function))
   {
-    std::cout << "decompose is null or not callable\n";
+    std::cout << "get_palette is null or not callable\n";
     if (PyErr_Occurred()) PyErr_Print();
     Py_XDECREF(function);
     Py_DECREF(module);
@@ -129,8 +129,8 @@ std::vector<Vector3> GradientMesh::get_palette() const
   return palette;
 }
 
-std::vector<Vector3> GradientMesh::get_recolored(
-    std::vector<Vector3> palette) const
+std::vector<float> GradientMesh::get_weights(
+    std::vector<Vector3> const &palette) const
 {
   if (!Py_IsInitialized())
   {
@@ -153,17 +153,17 @@ std::vector<Vector3> GradientMesh::get_recolored(
   {
     std::cout << "decompose can not be imported\n";
     PyErr_Print();
-    return std::vector<Vector3>(0);
+    return std::vector<float>(0);
   }
 
-  function = PyObject_GetAttrString(module, "recolor");
+  function = PyObject_GetAttrString(module, "get_weights");
   if (function == NULL || !PyCallable_Check(function))
   {
-    std::cout << "recolor is null or not callable\n";
+    std::cout << "get_weights is null or not callable\n";
     if (PyErr_Occurred()) PyErr_Print();
     Py_XDECREF(function);
     Py_DECREF(module);
-    return std::vector<Vector3>(0);
+    return std::vector<float>(0);
   }
 
   std::vector<float> rgbxy = rgbxy_data();
@@ -175,7 +175,8 @@ std::vector<Vector3> GradientMesh::get_recolored(
   npy_intp p_dims[2]{(npy_intp)palette.size(), 3};
   PyArrayObject *np_palette =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
-          2, p_dims, NPY_FLOAT, reinterpret_cast<void *>(palette.data())));
+          2, p_dims, NPY_FLOAT,
+          reinterpret_cast<void *>(const_cast<Vector3 *>(palette.data()))));
 
   arguments = PyTuple_New(2);
   PyTuple_SetItem(arguments, 0, reinterpret_cast<PyObject *>(np_rgbxy));
@@ -189,31 +190,36 @@ std::vector<Vector3> GradientMesh::get_recolored(
     // Py_DECREF(arguments);
     Py_DECREF(function);
     Py_DECREF(module);
-    return std::vector<Vector3>(0);
+    return std::vector<float>(0);
   }
 
-  PyArrayObject *np_rgb = reinterpret_cast<PyArrayObject *>(result);
-  Vector3 *raw_rgb = reinterpret_cast<Vector3 *>(PyArray_DATA(np_rgb));
-  int rgb_size = PyArray_SIZE(np_rgb) / 3;
+  PyArrayObject *np_weights = reinterpret_cast<PyArrayObject *>(result);
+  float *raw_weights = reinterpret_cast<float *>(PyArray_DATA(np_weights));
+  int weights_size = PyArray_SIZE(np_weights);
 
-  std::vector<Vector3> rgb(rgb_size);
-  for (int i = 0; i < rgb_size; ++i) rgb[i] = raw_rgb[i];
+  std::vector<float> weights(weights_size);
+  for (int i = 0; i < weights_size; ++i) weights[i] = raw_weights[i];
 
   Py_DECREF(function);
   Py_DECREF(module);
   Py_DECREF(np_rgbxy);
-  Py_DECREF(np_rgb);
+  Py_DECREF(np_weights);
   // Py_FinalizeEx();
 
-  return rgb;
+  return weights;
 }
 
-void GradientMesh::recolor(std::vector<Vector3> rgb)
+void GradientMesh::recolor(std::vector<float> const &weights,
+                           std::vector<Vector3> const &palette)
 {
+  int palette_size = palette.size();
   int i = 0;
   for (auto &edge : edges)
   {
-    edge.color = rgb[i];
+    // Each color is a weighted sum of palette colors.
+    edge.color = {0.0f, 0.0f, 0.0f};
+    for (int j = 0; j < palette_size; ++j)
+      edge.color += weights[i * palette_size + j] * palette[j];
     ++i;
   }
 }

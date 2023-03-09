@@ -2,27 +2,19 @@ import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.sparse import coo_matrix
 
-def decompose(rgb_data):
+def get_palette(rgb_data):
     rgb_hull = ConvexHull(rgb_data)
     rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
     print(f"Found palette:\n{rgb_hull_vertices}")
     return np.float32(rgb_hull_vertices)
 
-def recolor(rgbxy_data, palette):
-    print(f"Received rgbxy:\n{rgbxy_data}")
-    print(f"Received palette:\n{palette}")
-
+def get_weights(rgbxy_data, palette):
     rgbxy_hull_vertices = rgbxy_data[ConvexHull(rgbxy_data).vertices]
     w_rgbxy = delaunay_coordinates(rgbxy_hull_vertices, rgbxy_data)
+    w_rgb = star_coordinates(palette, rgbxy_hull_vertices[:,:3])
 
-    # Original palette.
-    rgb_hull = ConvexHull(rgbxy_data[:, :3].reshape(-1, 3))
-    rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
-
-    w_rgb = star_coordinates(rgb_hull_vertices, rgbxy_hull_vertices[:,:3])
-    rgb_data = w_rgbxy.dot(w_rgb).dot(palette).clip(0.0, 1.0)
-
-    return np.float32(rgb_data)
+    weights = w_rgbxy.dot(w_rgb)
+    return np.float32(weights)
 
 def delaunay_coordinates(vertices, data): # Adapted from Gareth Rees
     # Compute Delaunay tessellation.

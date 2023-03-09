@@ -201,11 +201,42 @@ class GradientMesh
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
 
+  /// Extracts a palette for the gradient mesh using the RGB convex hull.
+  /**
+   * The palette is found by taking the RGB-space convex hull of all colors
+   * present in the mesh. The vertices of the convex hull are the palette
+   * colors. Currently the convex hull is not simplified in the palette
+   * extraction process.
+   *
+   * @return A palette of colors for the gradient mesh.
+   */
   std::vector<hermite::Vector3> get_palette() const;
-  std::vector<hermite::Vector3> get_recolored(
-      std::vector<hermite::Vector3> palette) const; // TODO: get_weights.
 
-  void recolor(std::vector<hermite::Vector3> rgb);
+  /// Finds weights for the palette colors which reproduce each mesh color.
+  /**
+   * Uses the RGBXY-space geometry of the mesh to find weight vectors that
+   * specify linear combinations of the palette colors which reproduce the
+   * colors in the mesh.
+   *
+   * @param palette The palette colors to determine the weights for. Generally
+   * this should be the result of get_palette().
+   * @return weights The weights for the palette colors which reproduce each
+   * mesh color. Every P consecutive elements specify the weights for one point
+   * in the mesh, where P is the number of palette colors.
+   */
+  std::vector<float> get_weights(
+      std::vector<hermite::Vector3> const& palette) const;
+
+  /// Applies weights to a palette to obtain a recolored version of the mesh.
+  /**
+   * @param weights Weights that specify the contribution of the palette colors
+   * for each point in the mesh. Generally this should be the result of
+   * get_weights().
+   * @param palette The palette with which to recolor the mesh. If this is the
+   * result of get_palette() the colors of the mesh do not change.
+   */
+  void recolor(std::vector<float> const& weights,
+               std::vector<hermite::Vector3> const& palette);
 
  private:
   /// Creates a new parent half-edge with the given parameters.
