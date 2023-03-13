@@ -179,6 +179,18 @@ class GradientMesh
    */
   void merge_neighbours(Id<HalfEdge> separator_edge);
 
+  /// Returns a count of the number of handles in the mesh.
+  int handle_count() const;
+
+  /// Returns a count of the number of edges in the mesh.
+  int edge_count() const;
+
+  /// Returns a count of the number of patches in the mesh.
+  int patch_count() const;
+
+  /// Returns a count of the number of control points in the mesh.
+  int point_count() const;
+
   /// Returns a vector of all of the mesh's patches.
   std::vector<PatchRenderData> patch_data() const;
   /// Returns a vector of all of the mesh's control points.

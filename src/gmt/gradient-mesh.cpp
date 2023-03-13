@@ -226,6 +226,14 @@ void GradientMesh::set_color_vertex(Id<HalfEdge> edge, Vector3 color)
   }
 }
 
+int GradientMesh::handle_count() const { return handles.size(); }
+
+int GradientMesh::edge_count() const { return edges.size(); }
+
+int GradientMesh::patch_count() const { return patches.size(); }
+
+int GradientMesh::point_count() const { return points.size(); }
+
 std::vector<PatchRenderData> GradientMesh::patch_data() const
 {
   std::vector<PatchRenderData> ret;
