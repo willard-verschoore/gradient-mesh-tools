@@ -213,6 +213,20 @@ class GradientMesh
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
 
+  /// Extracts the mesh's edge colors as a flat array of floats.
+  /**
+   * @return An array of floats where each group of three consecutive elements
+   * represents the RGB color of an edge in the mesh.
+   */
+  std::vector<float> rgb_data() const;
+
+  /// Extracts the mesh's edge colors and origins as a flat array of floats.
+  /**
+   * @return An array of floats where each group of five consecutive elements
+   * represents the RGB color and XY origin position of an edge in the mesh.
+   */
+  std::vector<float> rgbxy_data() const;
+
   /// Extracts a palette for the gradient mesh using the RGB convex hull.
   /**
    * The palette is found by taking the RGB-space convex hull of all colors
@@ -502,9 +516,6 @@ class GradientMesh
   void write_handles(std::ostream& output) const;
   void write_patches(std::ostream& output) const;
   void write_edges(std::ostream& output) const;
-
-  std::vector<float> rgb_data() const;
-  std::vector<float> rgbxy_data() const;
 
   Storage<Handle> handles;
   Storage<HalfEdge> edges;
