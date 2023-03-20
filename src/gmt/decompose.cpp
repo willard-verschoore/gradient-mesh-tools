@@ -129,6 +129,79 @@ std::vector<Vector3> GradientMesh::get_palette() const
   return palette;
 }
 
+std::vector<uint32_t> GradientMesh::get_palette_indices() const
+{
+  std::vector<uint32_t> indices;
+
+  if (!Py_IsInitialized())
+  {
+    Py_Initialize();
+    _import_array(); // TODO: Check if < 0 like in import_array() macro.
+  }
+
+  // Load the Python module.
+  std::string module_path = std::string(GMT_ROOT) + "/src";
+  std::string module_load_command = "sys.path.append(\"" + module_path + "\")";
+  PyRun_SimpleString("import sys");
+  PyRun_SimpleString(module_load_command.c_str());
+
+  PyObject *module_name, *module, *function, *arguments, *result;
+
+  module_name = PyUnicode_FromString("decompose");
+  module = PyImport_Import(module_name);
+  Py_DECREF(module_name);
+  if (module == NULL)
+  {
+    std::cout << "decompose can not be imported\n";
+    PyErr_Print();
+    return indices;
+  }
+
+  function = PyObject_GetAttrString(module, "get_palette_indices");
+  if (function == NULL || !PyCallable_Check(function))
+  {
+    std::cout << "get_palette_indices is null or not callable\n";
+    if (PyErr_Occurred()) PyErr_Print();
+    Py_XDECREF(function);
+    Py_DECREF(module);
+    return indices;
+  }
+
+  std::vector<float> rgb = rgb_data();
+  npy_intp dims[2]{edges.size(), 3};
+  PyArrayObject *np_rgb =
+      reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
+          2, dims, NPY_FLOAT, reinterpret_cast<void *>(rgb.data())));
+
+  arguments = PyTuple_New(1);
+  PyTuple_SetItem(arguments, 0, reinterpret_cast<PyObject *>(np_rgb));
+  result = PyObject_CallObject(function, arguments);
+  if (result == NULL)
+  {
+    std::cout << "function call went wrong\n";
+    PyErr_Print();
+    // Py_DECREF(result);
+    // Py_DECREF(arguments);
+    Py_DECREF(function);
+    Py_DECREF(module);
+    return indices;
+  }
+
+  PyArrayObject *np_indices = reinterpret_cast<PyArrayObject *>(result);
+  uint32_t *raw_indices =
+      reinterpret_cast<uint32_t *>(PyArray_DATA(np_indices));
+  uint32_t indices_size = PyArray_SIZE(np_indices);
+  for (uint32_t i = 0; i < indices_size; ++i) indices.push_back(raw_indices[i]);
+
+  Py_DECREF(function);
+  Py_DECREF(module);
+  Py_DECREF(np_rgb);
+  Py_DECREF(np_indices);
+  // Py_FinalizeEx();
+
+  return indices;
+}
+
 std::vector<float> GradientMesh::get_weights(
     std::vector<Vector3> const &palette) const
 {

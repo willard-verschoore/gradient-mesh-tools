@@ -238,6 +238,15 @@ class GradientMesh
    */
   std::vector<hermite::Vector3> get_palette() const;
 
+  /// Extracts indices which can be used to draw the palette as a convex hull.
+  /**
+   * Should be used in conjunction with get_palette(). The indices come in pairs
+   * where each pair indicates a connection between two palette colors.
+   *
+   * @return Indices into the palette of colors for the gradient mesh.
+   */
+  std::vector<uint32_t> get_palette_indices() const;
+
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**
    * Uses the RGBXY-space geometry of the mesh to find weight vectors that
