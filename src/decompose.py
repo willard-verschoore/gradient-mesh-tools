@@ -83,7 +83,12 @@ def star_coordinates(vertices, data):
     ## Barycentric coordinates for the data in each simplex
     for s in simplices:
         s0 = vertices[s[:1]]
-        b = np.linalg.solve((vertices[s[1:]]-s0).T, (data-s0).T).T
+
+        try:
+            b = np.linalg.solve((vertices[s[1:]]-s0).T, (data-s0).T).T
+        except np.linalg.LinAlgError:
+            b = np.linalg.lstsq((vertices[s[1:]]-s0).T, (data-s0).T, rcond=None)[0].T
+
         b = np.append(1-b.sum(axis=1)[:,None], b, axis=1)
         ## Update barycoords whenever data is inside the current simplex (with threshold).
         mask = (b>=-1e-8).all(axis=1)
