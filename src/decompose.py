@@ -1,15 +1,28 @@
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
+from scipy.spatial.qhull import QhullError
 from scipy.sparse import coo_matrix
 
 def get_palette(rgb_data):
-    rgb_hull = ConvexHull(rgb_data)
-    rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
+    try:
+        rgb_hull = ConvexHull(rgb_data)
+        rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
+    except QhullError as error:
+        print("Encountered Qhull error:")
+        print(error)
+        return np.empty(0, np.float32)
+
     print(f"Found palette:\n{rgb_hull_vertices}")
     return np.float32(rgb_hull_vertices)
 
 def get_palette_indices(rgb_data):
-    rgb_hull = ConvexHull(rgb_data)
+    try:
+        rgb_hull = ConvexHull(rgb_data)
+    except QhullError as error:
+        print("Encountered Qhull error:")
+        print(error)
+        return np.empty(0, np.uint32)
+
     vertex_count = len(rgb_hull.vertices)
 
     rgb_hull_indices = []
@@ -27,11 +40,15 @@ def get_palette_indices(rgb_data):
 
     return np.uint32(rgb_hull_indices)
 
-
 def get_weights(rgbxy_data, palette):
-    rgbxy_hull_vertices = rgbxy_data[ConvexHull(rgbxy_data).vertices]
-    w_rgbxy = delaunay_coordinates(rgbxy_hull_vertices, rgbxy_data)
-    w_rgb = star_coordinates(palette, rgbxy_hull_vertices[:,:3])
+    try:
+        rgbxy_hull_vertices = rgbxy_data[ConvexHull(rgbxy_data).vertices]
+        w_rgbxy = delaunay_coordinates(rgbxy_hull_vertices, rgbxy_data)
+        w_rgb = star_coordinates(palette, rgbxy_hull_vertices[:,:3])
+    except QhullError as error:
+        print("Encountered Qhull error:")
+        print(error)
+        return np.empty(0, np.float32)
 
     weights = w_rgbxy.dot(w_rgb)
     return np.float32(weights)
