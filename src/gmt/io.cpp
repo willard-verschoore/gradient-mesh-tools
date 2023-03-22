@@ -8,6 +8,29 @@ namespace gmt
 
 using namespace hermite;
 
+// Utility function for reading 2D positions.
+std::istream &operator>>(std::istream &stream, Vector2 &position)
+{
+  stream >> position.x;
+  stream >> position.y;
+
+  return stream;
+}
+
+// Utility function for reading RGB colors. Clamps the channels to [0, 1].
+std::istream &operator>>(std::istream &stream, Vector3 &color)
+{
+  stream >> color.r;
+  stream >> color.g;
+  stream >> color.b;
+
+  color.r = std::clamp(color.r, 0.0f, 1.0f);
+  color.g = std::clamp(color.g, 0.0f, 1.0f);
+  color.b = std::clamp(color.b, 0.0f, 1.0f);
+
+  return stream;
+}
+
 static void read_header(std::istream &input, int &num_points, int &num_handles,
                         int &num_patches, int &num_edges)
 {
@@ -31,8 +54,7 @@ void GradientMesh::read_points(std::istream &input, int num_points)
 
     Id<ControlPoint> point = points.add(ControlPoint({}));
 
-    tokens >> points[point].coords.x;
-    tokens >> points[point].coords.y;
+    tokens >> points[point].coords;
 
     Id<HalfEdge> edge{0, 0};
     tokens >> edge.id;
@@ -56,12 +78,8 @@ void GradientMesh::read_handles(std::istream &input, int num_handles)
     tokens >> edge.id;
     handles[handle].edge = edge;
 
-    tokens >> handles[handle].tangent.coords.x;
-    tokens >> handles[handle].tangent.coords.y;
-
-    tokens >> handles[handle].tangent.color.r;
-    tokens >> handles[handle].tangent.color.g;
-    tokens >> handles[handle].tangent.color.b;
+    tokens >> handles[handle].tangent.coords;
+    tokens >> handles[handle].tangent.color;
   }
 }
 
@@ -100,11 +118,11 @@ void GradientMesh::read_edges(std::istream &input, int num_edges)
     tokens >> interval.start >> interval.end;
 
     Interpolant twist;
-    tokens >> twist.coords.x >> twist.coords.y;
-    tokens >> twist.color.r >> twist.color.g >> twist.color.b;
+    tokens >> twist.coords;
+    tokens >> twist.color;
 
     Vector3 color;
-    tokens >> color.r >> color.g >> color.b;
+    tokens >> color;
 
     int handle_1_id, handle_2_id;
     tokens >> handle_1_id >> handle_2_id;
