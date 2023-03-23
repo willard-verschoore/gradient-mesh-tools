@@ -14,14 +14,26 @@ using namespace hermite;
 
 std::vector<float> GradientMesh::rgb_data() const
 {
+  std::vector<PatchRenderData> patches = patch_data();
   std::vector<float> data;
-  data.reserve(3 * edges.size());
+  data.reserve(3 * 4 * patches.size()); // 3D RGB data, 4 corners.
 
-  for (auto const &edge : edges)
+  for (auto const &patch : patches)
   {
-    data.push_back(edge.color.r);
-    data.push_back(edge.color.g);
-    data.push_back(edge.color.b);
+    // The corners of a patch matrix store the corners of the patch. The order
+    // of the corners is chosen such that it matches the recolor() function.
+    data.push_back(patch.matrix(0, 0).color.r);
+    data.push_back(patch.matrix(0, 0).color.g);
+    data.push_back(patch.matrix(0, 0).color.b);
+    data.push_back(patch.matrix(3, 0).color.r);
+    data.push_back(patch.matrix(3, 0).color.g);
+    data.push_back(patch.matrix(3, 0).color.b);
+    data.push_back(patch.matrix(3, 3).color.r);
+    data.push_back(patch.matrix(3, 3).color.g);
+    data.push_back(patch.matrix(3, 3).color.b);
+    data.push_back(patch.matrix(0, 3).color.r);
+    data.push_back(patch.matrix(0, 3).color.g);
+    data.push_back(patch.matrix(0, 3).color.b);
   }
 
   return data;
@@ -29,29 +41,34 @@ std::vector<float> GradientMesh::rgb_data() const
 
 std::vector<float> GradientMesh::rgbxy_data() const
 {
+  std::vector<PatchRenderData> patches = patch_data();
   std::vector<float> data;
-  data.reserve(5 * edges.size());
+  data.reserve(5 * 4 * patches.size()); // 5D RGBXY data, 4 corners.
 
-  for (auto const &edge : edges)
+  for (auto const &patch : patches)
   {
-    data.push_back(edge.color.r);
-    data.push_back(edge.color.g);
-    data.push_back(edge.color.b);
-
-    // Find the origin position of the edge. Easy for parent edges, but
-    // more difficult for child edges.
-    Vector2 origin;
-    visit([&](Parent const &parent) { origin = points[parent.origin].coords; },
-          [&](Child const &child)
-          {
-            CurveMatrix curve = curve_matrix(child.parent);
-            float t = child.interval.start;
-            origin = interpolate(curve, t).coords;
-          },
-          edge);
-
-    data.push_back(origin.x);
-    data.push_back(origin.y);
+    // The corners of a patch matrix store the corners of the patch. The order
+    // of the corners is chosen such that it matches the recolor() function.
+    data.push_back(patch.matrix(0, 0).color.r);
+    data.push_back(patch.matrix(0, 0).color.g);
+    data.push_back(patch.matrix(0, 0).color.b);
+    data.push_back(patch.matrix(0, 0).coords.x);
+    data.push_back(patch.matrix(0, 0).coords.y);
+    data.push_back(patch.matrix(3, 0).color.r);
+    data.push_back(patch.matrix(3, 0).color.g);
+    data.push_back(patch.matrix(3, 0).color.b);
+    data.push_back(patch.matrix(3, 0).coords.x);
+    data.push_back(patch.matrix(3, 0).coords.y);
+    data.push_back(patch.matrix(3, 3).color.r);
+    data.push_back(patch.matrix(3, 3).color.g);
+    data.push_back(patch.matrix(3, 3).color.b);
+    data.push_back(patch.matrix(3, 3).coords.x);
+    data.push_back(patch.matrix(3, 3).coords.y);
+    data.push_back(patch.matrix(0, 3).color.r);
+    data.push_back(patch.matrix(0, 3).color.g);
+    data.push_back(patch.matrix(0, 3).color.b);
+    data.push_back(patch.matrix(0, 3).coords.x);
+    data.push_back(patch.matrix(0, 3).coords.y);
   }
 
   return data;
@@ -96,7 +113,7 @@ std::vector<Vector3> GradientMesh::get_palette() const
   }
 
   std::vector<float> rgb = rgb_data();
-  npy_intp dims[2]{edges.size(), 3};
+  npy_intp dims[2]{(npy_intp)rgb.size() / 3, 3};
   PyArrayObject *np_rgb =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, dims, NPY_FLOAT, reinterpret_cast<void *>(rgb.data())));
@@ -168,7 +185,7 @@ std::vector<uint32_t> GradientMesh::get_palette_indices() const
   }
 
   std::vector<float> rgb = rgb_data();
-  npy_intp dims[2]{edges.size(), 3};
+  npy_intp dims[2]{(npy_intp)rgb.size() / 3, 3};
   PyArrayObject *np_rgb =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, dims, NPY_FLOAT, reinterpret_cast<void *>(rgb.data())));
@@ -240,7 +257,7 @@ std::vector<float> GradientMesh::get_weights(
   }
 
   std::vector<float> rgbxy = rgbxy_data();
-  npy_intp dims[2]{edges.size(), 5};
+  npy_intp dims[2]{(npy_intp)rgbxy.size() / 5, 5};
   PyArrayObject *np_rgbxy =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, dims, NPY_FLOAT, reinterpret_cast<void *>(rgbxy.data())));
@@ -285,15 +302,27 @@ std::vector<float> GradientMesh::get_weights(
 void GradientMesh::recolor(std::vector<float> const &weights,
                            std::vector<Vector3> const &palette)
 {
-  int palette_size = palette.size();
-  int i = 0;
-  for (auto &edge : edges)
+  size_t index = 0;
+  Vector3 color = {0.0f, 0.0f, 0.0f};
+
+  for (auto const &patch : patches)
   {
-    // Each color is a weighted sum of palette colors.
-    edge.color = {0.0f, 0.0f, 0.0f};
-    for (int j = 0; j < palette_size; ++j)
-      edge.color += weights[i * palette_size + j] * palette[j];
-    ++i;
+    // Get the sides of the patch.
+    Id<HalfEdge> sides[4];
+    sides[0] = patch.side;
+    sides[1] = edges[sides[0]].next;
+    sides[2] = edges[sides[1]].next;
+    sides[3] = edges[sides[2]].next;
+
+    for (size_t i = 0; i < 4; ++i)
+    {
+      // Each color is a weighted sum of palette colors.
+      color = {0.0f, 0.0f, 0.0f};
+      for (size_t j = 0; j < palette.size(); ++j)
+        color += weights[index * palette.size() + j] * palette[j];
+      set_color(sides[i], color);
+      ++index;
+    }
   }
 }
 
