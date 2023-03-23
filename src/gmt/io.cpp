@@ -9,26 +9,25 @@ namespace gmt
 using namespace hermite;
 
 // Utility function for reading 2D positions.
-std::istream &operator>>(std::istream &stream, Vector2 &position)
+static void read_position(std::istream &input, Vector2 &position)
 {
-  stream >> position.x;
-  stream >> position.y;
-
-  return stream;
+  input >> position.x;
+  input >> position.y;
 }
 
-// Utility function for reading RGB colors. Clamps the channels to [0, 1].
-std::istream &operator>>(std::istream &stream, Vector3 &color)
+// Utility function for reading RGB colors. Can Clamp the channels to [0, 1].
+static void read_color(std::istream &input, Vector3 &color, bool clamp)
 {
-  stream >> color.r;
-  stream >> color.g;
-  stream >> color.b;
+  input >> color.r;
+  input >> color.g;
+  input >> color.b;
 
-  color.r = std::clamp(color.r, 0.0f, 1.0f);
-  color.g = std::clamp(color.g, 0.0f, 1.0f);
-  color.b = std::clamp(color.b, 0.0f, 1.0f);
-
-  return stream;
+  if (clamp)
+  {
+    color.r = std::clamp(color.r, 0.0f, 1.0f);
+    color.g = std::clamp(color.g, 0.0f, 1.0f);
+    color.b = std::clamp(color.b, 0.0f, 1.0f);
+  }
 }
 
 static void read_header(std::istream &input, int &num_points, int &num_handles,
@@ -54,7 +53,7 @@ void GradientMesh::read_points(std::istream &input, int num_points)
 
     Id<ControlPoint> point = points.add(ControlPoint({}));
 
-    tokens >> points[point].coords;
+    read_position(tokens, points[point].coords);
 
     Id<HalfEdge> edge{0, 0};
     tokens >> edge.id;
@@ -78,8 +77,8 @@ void GradientMesh::read_handles(std::istream &input, int num_handles)
     tokens >> edge.id;
     handles[handle].edge = edge;
 
-    tokens >> handles[handle].tangent.coords;
-    tokens >> handles[handle].tangent.color;
+    read_position(tokens, handles[handle].tangent.coords);
+    read_color(tokens, handles[handle].tangent.color, false);
   }
 }
 
@@ -118,11 +117,11 @@ void GradientMesh::read_edges(std::istream &input, int num_edges)
     tokens >> interval.start >> interval.end;
 
     Interpolant twist;
-    tokens >> twist.coords;
-    tokens >> twist.color;
+    read_position(tokens, twist.coords);
+    read_color(tokens, twist.color, false);
 
     Vector3 color;
-    tokens >> color;
+    read_color(tokens, color, true);
 
     int handle_1_id, handle_2_id;
     tokens >> handle_1_id >> handle_2_id;
