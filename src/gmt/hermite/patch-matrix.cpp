@@ -15,6 +15,16 @@ const PatchMatrix PatchMatrix::N_INV{{1.0f, 0.0f, 0.0f, 0.0f, //
                                       0.0f, 1.0f, 2.0f, 3.0f, //
                                       1.0f, 1.0f, 1.0f, 1.0f}};
 
+const PatchMatrix PatchMatrix::M{{1.0f, 0.0f, 0.0f, 0.0f,  //
+                                  -3.0f, 3.0f, 0.0f, 0.0f, //
+                                  3.0f, -6.0f, 3.0f, 0.0f, //
+                                  -1.0f, 3.0f, -3.0f, 1.0f}};
+
+const PatchMatrix PatchMatrix::M_INV{{1.0f, 0.0f, 0.0f, 0.0f,               //
+                                      1.0f, 1.0f / 3.0f, 0.0f, 0.0f,        //
+                                      1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 0.0f, //
+                                      1.0f, 1.0f, 1.0f, 1.0f}};
+
 PatchMatrix &PatchMatrix::add(PatchMatrix const &other)
 {
   for (int i = 0; i < 4 * 4; ++i) data[i] += other.data[i];
@@ -119,6 +129,26 @@ void PatchMatrix::transpose()
                                data[2], data[6], data[10], data[14],
                                data[3], data[7], data[11], data[15]};
   memcpy(data, buffer, 4 * 4 * sizeof(Interpolant));
+}
+
+PatchMatrix PatchMatrix::hermite() const
+{
+  return N_INV * M * (*this) * M.transposed() * N_INV.transposed();
+}
+
+PatchMatrix PatchMatrix::bezier() const
+{
+  return M_INV * N * (*this) * N.transposed() * M_INV.transposed();
+}
+
+void PatchMatrix::to_hermite()
+{
+  *this = N_INV * M * (*this) * M.transposed() * N_INV.transposed();
+}
+
+void PatchMatrix::to_bezier()
+{
+  *this = M_INV * N * (*this) * N.transposed() * M_INV.transposed();
 }
 
 PatchMatrix add(PatchMatrix const &left, PatchMatrix const &right)

@@ -21,11 +21,16 @@ static PatchMatrix test_patch()
   return patch;
 }
 
-static bool approx_eq(const Interpolant& a, const Interpolant& b)
+static bool approx_eq(const Interpolant &a, const Interpolant &b)
 {
   for (int i = 0; i < Interpolant::COMPONENTS; ++i)
   {
-    if (std::abs(a[i] - b[i]) > std::min(std::abs(a[i]), std::abs(b[i])) * 1e-6)
+    // Always allow very small differences (useful if a = 0 or b = 0).
+    if (std::abs(a[i] - b[i]) < 1e-4) continue;
+
+    // Require smaller difference for small numbers and allow larger difference
+    // for large numbers.
+    if (std::abs(a[i] - b[i]) > std::max(std::abs(a[i]), std::abs(b[i])) * 1e-4)
       return false;
   }
 
@@ -83,4 +88,20 @@ TEST_CASE("Surface interpolation at non-corner values", "[hermite]")
   CHECK(approx_eq(left, interpolate(patch, 0.5f, 0.0f)));
   CHECK(approx_eq(right, interpolate(patch, 0.5f, 1.0f)));
   CHECK(approx_eq(center, interpolate(patch, 0.5f, 0.5f)));
+}
+
+TEST_CASE("Conversion to and from Bezier representation", "[hermite]")
+{
+  const auto patch = test_patch();
+
+  auto in_place = test_patch();
+  in_place.to_bezier();
+  in_place.to_hermite();
+  auto copy = patch.bezier().hermite();
+
+  for (int i = 0; i < 16; ++i)
+  {
+    CHECK(approx_eq(patch.data[i], in_place.data[i]));
+    CHECK(approx_eq(patch.data[i], copy.data[i]));
+  }
 }

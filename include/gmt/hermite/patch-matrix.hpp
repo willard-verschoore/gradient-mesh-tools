@@ -11,9 +11,15 @@ struct PatchMatrix
 {
   Interpolant data[4 * 4];
 
-  // TODO: Consider making these local to hermite.cpp.
+  // A Hermite patch with PatchMatrix G is given by:
+  // H(u, v) = (1, u, u^2, u^3) * N * G * N^T * (1, v, v^2, v^3)^T.
   static const PatchMatrix N;
   static const PatchMatrix N_INV;
+
+  // A Bezier patch with PatchMatrix P is given by:
+  // B(u, v) = (1, u, u^2, u^3) * M * P * M^T * (1, v, v^2, v^3)^T.
+  static const PatchMatrix M;
+  static const PatchMatrix M_INV;
 
   constexpr PatchMatrix() = default;
 
@@ -56,6 +62,11 @@ struct PatchMatrix
 
   PatchMatrix transposed() const;
   void transpose();
+
+  PatchMatrix hermite() const;
+  PatchMatrix bezier() const;
+  void to_hermite();
+  void to_bezier();
 };
 
 PatchMatrix add(PatchMatrix const &left, PatchMatrix const &right);
