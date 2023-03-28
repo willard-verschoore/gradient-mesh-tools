@@ -191,8 +191,9 @@ class GradientMesh
   /// Returns a count of the number of control points in the mesh.
   int point_count() const;
 
+  std::vector<PatchRenderData> render_data() const;
   /// Returns a vector of all of the mesh's patches.
-  std::vector<PatchRenderData> patch_data() const;
+  std::vector<hermite::PatchMatrix> patch_data() const;
   /// Returns a vector of all of the mesh's control points.
   std::vector<hermite::Interpolant> point_data() const;
   /// Returns a vector of all of the mesh's tangent handles.
@@ -209,6 +210,27 @@ class GradientMesh
 
   bool isChild(Id<HalfEdge> edge) const;
   Interval getInterval(Id<HalfEdge> edge) const;
+
+  /// Reads the data from the given PatchMatrix objects into the mesh.
+  /**
+   * Ideally, after calling this function a call to patch_data() would return an
+   * array identical to \c data. There are some restrictions to this however.
+   *
+   * This is because an array of patch matrices contains redundant data. For
+   * example, the coordinates of a control point will occur in the matrix of
+   * every adjacent patch. If \c data contains contradictory coordinates for
+   * such a control point only the values in the last patch matrix will actually
+   * be used.
+   *
+   * A similar situation occurs for patches resulting from splits where at least
+   * one side is a child edge. Some properties of such an edge are determined by
+   * its parent. If \c data contains new values for these properties they will
+   * be ignored. Changes to the parent edge will be applied and propagated to
+   * its children.
+   *
+   * @param data The PatchMatrix objects to read from.
+   */
+  void read_patch_data(std::vector<hermite::PatchMatrix> const& data);
 
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
@@ -515,6 +537,10 @@ class GradientMesh
    */
   void update_twists(Id<HalfEdge> edge,
                      std::array<hermite::Interpolant, 2> new_twists);
+
+  void read_curve_matrix(HalfEdge& edge, hermite::CurveMatrix const& matrix);
+  void read_patch_matrix(Patch const& patch,
+                         hermite::PatchMatrix const& matrix);
 
   void read_points(std::istream& input, int num_points);
   void read_handles(std::istream& input, int num_handles);

@@ -14,7 +14,7 @@ using namespace hermite;
 
 std::vector<float> GradientMesh::rgb_data() const
 {
-  std::vector<PatchRenderData> patches = patch_data();
+  std::vector<PatchMatrix> patches = patch_data();
   std::vector<float> data;
   data.reserve(3 * 4 * patches.size()); // 3D RGB data, 4 corners.
 
@@ -22,18 +22,18 @@ std::vector<float> GradientMesh::rgb_data() const
   {
     // The corners of a patch matrix store the corners of the patch. The order
     // of the corners is chosen such that it matches the recolor() function.
-    data.push_back(patch.matrix(0, 0).color.r);
-    data.push_back(patch.matrix(0, 0).color.g);
-    data.push_back(patch.matrix(0, 0).color.b);
-    data.push_back(patch.matrix(3, 0).color.r);
-    data.push_back(patch.matrix(3, 0).color.g);
-    data.push_back(patch.matrix(3, 0).color.b);
-    data.push_back(patch.matrix(3, 3).color.r);
-    data.push_back(patch.matrix(3, 3).color.g);
-    data.push_back(patch.matrix(3, 3).color.b);
-    data.push_back(patch.matrix(0, 3).color.r);
-    data.push_back(patch.matrix(0, 3).color.g);
-    data.push_back(patch.matrix(0, 3).color.b);
+    data.push_back(patch(0, 0).color.r);
+    data.push_back(patch(0, 0).color.g);
+    data.push_back(patch(0, 0).color.b);
+    data.push_back(patch(3, 0).color.r);
+    data.push_back(patch(3, 0).color.g);
+    data.push_back(patch(3, 0).color.b);
+    data.push_back(patch(3, 3).color.r);
+    data.push_back(patch(3, 3).color.g);
+    data.push_back(patch(3, 3).color.b);
+    data.push_back(patch(0, 3).color.r);
+    data.push_back(patch(0, 3).color.g);
+    data.push_back(patch(0, 3).color.b);
   }
 
   return data;
@@ -41,7 +41,7 @@ std::vector<float> GradientMesh::rgb_data() const
 
 std::vector<float> GradientMesh::rgbxy_data() const
 {
-  std::vector<PatchRenderData> patches = patch_data();
+  std::vector<PatchMatrix> patches = patch_data();
   std::vector<float> data;
   data.reserve(5 * 4 * patches.size()); // 5D RGBXY data, 4 corners.
 
@@ -49,26 +49,26 @@ std::vector<float> GradientMesh::rgbxy_data() const
   {
     // The corners of a patch matrix store the corners of the patch. The order
     // of the corners is chosen such that it matches the recolor() function.
-    data.push_back(patch.matrix(0, 0).color.r);
-    data.push_back(patch.matrix(0, 0).color.g);
-    data.push_back(patch.matrix(0, 0).color.b);
-    data.push_back(patch.matrix(0, 0).coords.x);
-    data.push_back(patch.matrix(0, 0).coords.y);
-    data.push_back(patch.matrix(3, 0).color.r);
-    data.push_back(patch.matrix(3, 0).color.g);
-    data.push_back(patch.matrix(3, 0).color.b);
-    data.push_back(patch.matrix(3, 0).coords.x);
-    data.push_back(patch.matrix(3, 0).coords.y);
-    data.push_back(patch.matrix(3, 3).color.r);
-    data.push_back(patch.matrix(3, 3).color.g);
-    data.push_back(patch.matrix(3, 3).color.b);
-    data.push_back(patch.matrix(3, 3).coords.x);
-    data.push_back(patch.matrix(3, 3).coords.y);
-    data.push_back(patch.matrix(0, 3).color.r);
-    data.push_back(patch.matrix(0, 3).color.g);
-    data.push_back(patch.matrix(0, 3).color.b);
-    data.push_back(patch.matrix(0, 3).coords.x);
-    data.push_back(patch.matrix(0, 3).coords.y);
+    data.push_back(patch(0, 0).color.r);
+    data.push_back(patch(0, 0).color.g);
+    data.push_back(patch(0, 0).color.b);
+    data.push_back(patch(0, 0).coords.x);
+    data.push_back(patch(0, 0).coords.y);
+    data.push_back(patch(3, 0).color.r);
+    data.push_back(patch(3, 0).color.g);
+    data.push_back(patch(3, 0).color.b);
+    data.push_back(patch(3, 0).coords.x);
+    data.push_back(patch(3, 0).coords.y);
+    data.push_back(patch(3, 3).color.r);
+    data.push_back(patch(3, 3).color.g);
+    data.push_back(patch(3, 3).color.b);
+    data.push_back(patch(3, 3).coords.x);
+    data.push_back(patch(3, 3).coords.y);
+    data.push_back(patch(0, 3).color.r);
+    data.push_back(patch(0, 3).color.g);
+    data.push_back(patch(0, 3).color.b);
+    data.push_back(patch(0, 3).coords.x);
+    data.push_back(patch(0, 3).coords.y);
   }
 
   return data;

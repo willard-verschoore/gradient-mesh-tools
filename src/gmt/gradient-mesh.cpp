@@ -234,13 +234,23 @@ int GradientMesh::patch_count() const { return patches.size(); }
 
 int GradientMesh::point_count() const { return points.size(); }
 
-std::vector<PatchRenderData> GradientMesh::patch_data() const
+std::vector<PatchRenderData> GradientMesh::render_data() const
 {
   std::vector<PatchRenderData> ret;
   ret.reserve(patches.size());
 
   for (const auto& patch : patches)
     ret.emplace_back(patch_matrix(patch.side).transposed(), boundary(patch));
+
+  return ret;
+}
+
+std::vector<PatchMatrix> GradientMesh::patch_data() const
+{
+  std::vector<PatchMatrix> ret;
+  ret.reserve(patches.size());
+
+  for (const auto& patch : patches) ret.emplace_back(patch_matrix(patch.side));
 
   return ret;
 }
@@ -451,6 +461,81 @@ std::set<float> GradientMesh::snap_points(Id<HalfEdge> edge) const
     ret.insert(1.0f - point);
   }
   return ret;
+}
+
+void GradientMesh::read_curve_matrix(HalfEdge& edge, CurveMatrix const& matrix)
+{
+  // Set common edge properties.
+  edge.color = matrix[0].color;
+  edge.twist = matrix[1];
+
+  // Set parent and child specific properties.
+  visit(
+      [&](Parent const& parent)
+      {
+        points[parent.origin].coords = matrix[0].coords;
+        handles[parent.handles[0]].tangent = matrix[2];
+        handles[parent.handles[1]].tangent = -matrix[3];
+      },
+      [&](Child const& child)
+      {
+        if (child.handles)
+        {
+          auto [start, end] = child.handles.value();
+          handles[start].tangent = matrix[2];
+          handles[end].tangent = -matrix[3];
+        }
+      },
+      edge);
+}
+
+void GradientMesh::read_patch_matrix(Patch const& patch,
+                                     hermite::PatchMatrix const& matrix)
+{
+  auto top = patch.side;
+  auto right = edges[top].next;
+  auto bottom = edges[right].next;
+  auto left = edges[bottom].next;
+  assert(top == edges[left].next);
+
+  // Following the patch_matrix() function, the target curve matrices are:
+  // top:    {m0, m0uv, m0v, m1v}
+  // right:  {m1, m1uv, m1u, m3u}
+  // bottom: {m3, m3uv, m3v, m2v}
+  // left    {m2, m2uv, m2u, m0u}
+  //
+  // The given patch matrix is:
+  // |   m0   m0v   m1v  m1 |
+  // | -m0u  m0uv -m1uv m1u |
+  // | -m2u -m2uv  m3uv m3u |
+  // |   m2  -m2v  -m3v  m3 |
+
+  // Reconstruct curve matrices from the patch matrix.
+  CurveMatrix top_curve{
+      {matrix(0, 0), matrix(1, 1), matrix(0, 1), matrix(0, 2)}};
+  CurveMatrix right_curve{
+      {matrix(0, 3), -matrix(1, 2), matrix(1, 3), matrix(2, 3)}};
+  CurveMatrix bottom_curve{
+      {matrix(3, 3), matrix(2, 2), -matrix(3, 2), -matrix(3, 1)}};
+  CurveMatrix left_curve{
+      {matrix(3, 0), -matrix(2, 1), -matrix(2, 0), -matrix(1, 0)}};
+
+  read_curve_matrix(edges[top], top_curve);
+  read_curve_matrix(edges[right], right_curve);
+  read_curve_matrix(edges[bottom], bottom_curve);
+  read_curve_matrix(edges[left], left_curve);
+}
+
+void GradientMesh::read_patch_data(std::vector<PatchMatrix> const& data)
+{
+  assert(patches.size() == data.size());
+
+  size_t index = 0;
+  for (auto const& patch : patches)
+  {
+    read_patch_matrix(patch, data[index]);
+    ++index;
+  }
 }
 
 } // namespace gmt

@@ -4,6 +4,7 @@ find_package(Catch2)
 if (Catch2_FOUND)
   set(SOURCE_FILES
     catch.cpp
+    gradient-mesh.cpp
     hermite.cpp
     slot-map.cpp
   )
