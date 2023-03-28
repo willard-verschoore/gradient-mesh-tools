@@ -29,4 +29,24 @@ struct CurveMatrix
 
 Interpolant dot(CurveMatrix const &left, CurveMatrix const &right);
 
+/// Checks whether \c left and \c right are equal.
+/**
+ * Two CurveMatrix objects are equal if each corresponding pair of elements is
+ * equal.
+ *
+ * @param left,right The CurveMatrix objects to compare.
+ * @return Whether \c left and \c right are equal.
+ */
+bool operator==(CurveMatrix const &left, CurveMatrix const &right);
+
+/// Checks whether \c left and \c right are not equal.
+/**
+ * Two CurveMatrix objects are equal if each corresponding pair of elements is
+ * equal. They are therefore unequal if there is at least one unequal pair.
+ *
+ * @param left,right The CurveMatrix objects to compare.
+ * @return Whether \c left and \c right are not equal.
+ */
+bool operator!=(CurveMatrix const &left, CurveMatrix const &right);
+
 } // namespace gmt::hermite

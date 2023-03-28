@@ -21,4 +21,16 @@ Interpolant dot(CurveMatrix const &left, CurveMatrix const &right)
          left[3] * right[3];
 }
 
+bool operator==(CurveMatrix const &left, CurveMatrix const &right)
+{
+  for (int i = 0; i < 4 * 4; ++i)
+    if (left.data[i] != right.data[i]) return false;
+  return true;
+}
+
+bool operator!=(CurveMatrix const &left, CurveMatrix const &right)
+{
+  return !(left == right);
+}
+
 } // namespace gmt::hermite

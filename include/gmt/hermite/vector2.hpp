@@ -390,6 +390,26 @@ float distance(Vector2 const &left, Vector2 const &right);
  */
 float distance_squared(Vector2 const &left, Vector2 const &right);
 
+/// Checks whether \c left and \c right are equal.
+/**
+ * Two Vector2D objects are equal if each corresponding pair of components is
+ * equal.
+ *
+ * @param left,right The Vector2D objects to compare.
+ * @return Whether \c left and \c right are equal.
+ */
+bool operator==(Vector2 const &left, Vector2 const &right);
+
+/// Checks whether \c left and \c right are not equal.
+/**
+ * Two Vector2 objects are equal if each corresponding pair of components is
+ * equal. They are therefore unequal if there is at least one unequal pair.
+ *
+ * @param left,right The Vector2 objects to compare.
+ * @return Whether \c left and \c right are not equal.
+ */
+bool operator!=(Vector2 const &left, Vector2 const &right);
+
 /// Writes the given vector to the given stream.
 /**
  * Will write the vector as (x, y), i.e., a space separated list of the vector's

@@ -96,4 +96,24 @@ PatchMatrix operator*(Interpolant const &left, PatchMatrix const &right);
 PatchMatrix negate(PatchMatrix const &patch);
 PatchMatrix operator-(PatchMatrix const &patch);
 
+/// Checks whether \c left and \c right are equal.
+/**
+ * Two PatchMatrix objects are equal if each corresponding pair of elements is
+ * equal.
+ *
+ * @param left,right The PatchMatrix objects to compare.
+ * @return Whether \c left and \c right are equal.
+ */
+bool operator==(PatchMatrix const &left, PatchMatrix const &right);
+
+/// Checks whether \c left and \c right are not equal.
+/**
+ * Two PatchMatrix objects are equal if each corresponding pair of elements is
+ * equal. They are therefore unequal if there is at least one unequal pair.
+ *
+ * @param left,right The PatchMatrix objects to compare.
+ * @return Whether \c left and \c right are not equal.
+ */
+bool operator!=(PatchMatrix const &left, PatchMatrix const &right);
+
 } // namespace gmt::hermite

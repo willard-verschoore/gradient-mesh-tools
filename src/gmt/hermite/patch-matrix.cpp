@@ -259,4 +259,16 @@ PatchMatrix negate(PatchMatrix const &patch)
 
 PatchMatrix operator-(PatchMatrix const &patch) { return negate(patch); }
 
+bool operator==(PatchMatrix const &left, PatchMatrix const &right)
+{
+  for (int i = 0; i < 4 * 4; ++i)
+    if (left.data[i] != right.data[i]) return false;
+  return true;
+}
+
+bool operator!=(PatchMatrix const &left, PatchMatrix const &right)
+{
+  return !(left == right);
+}
+
 } // namespace gmt::hermite

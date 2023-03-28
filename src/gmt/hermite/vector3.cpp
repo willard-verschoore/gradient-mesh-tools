@@ -253,6 +253,16 @@ float distance_squared(Vector3 const &left, Vector3 const &right)
   return (left - right).length_squared();
 }
 
+bool operator==(Vector3 const &left, Vector3 const &right)
+{
+  return left.x == right.x && left.y == right.y && left.z == right.z;
+}
+
+bool operator!=(Vector3 const &left, Vector3 const &right)
+{
+  return !(left == right);
+}
+
 std::ostream &operator<<(std::ostream &stream, Vector3 const &vector)
 {
   return stream << "(" << vector.x << ", " << vector.y << ", " << vector.z

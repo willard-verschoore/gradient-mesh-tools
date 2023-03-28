@@ -102,4 +102,24 @@ bool is_zero(const Interpolant& i, float coords_epsilon, float color_epsilon);
 /// The 'length' of the 5D vector of an Interpolant.
 float length(const Interpolant& i);
 
+/// Checks whether \c left and \c right are equal.
+/**
+ * Two Interpolant objects are equal if each corresponding pair of components is
+ * equal.
+ *
+ * @param left,right The Interpolant objects to compare.
+ * @return Whether \c left and \c right are equal.
+ */
+bool operator==(Interpolant const& left, Interpolant const& right);
+
+/// Checks whether \c left and \c right are not equal.
+/**
+ * Two Interpolant objects are equal if each corresponding pair of components is
+ * equal. They are therefore unequal if there is at least one unequal pair.
+ *
+ * @param left,right The Interpolant objects to compare.
+ * @return Whether \c left and \c right are not equal.
+ */
+bool operator!=(Interpolant const& left, Interpolant const& right);
+
 } // namespace gmt::hermite

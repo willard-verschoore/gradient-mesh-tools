@@ -77,4 +77,14 @@ float length(const Interpolant& i)
   return sqrt(size);
 }
 
+bool operator==(Interpolant const& left, Interpolant const& right)
+{
+  return left.coords == right.coords && left.color == right.color;
+}
+
+bool operator!=(Interpolant const& left, Interpolant const& right)
+{
+  return !(left == right);
+}
+
 } // namespace gmt::hermite

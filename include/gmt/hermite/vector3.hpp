@@ -405,6 +405,26 @@ float distance(Vector3 const &left, Vector3 const &right);
  */
 float distance_squared(Vector3 const &left, Vector3 const &right);
 
+/// Checks whether \c left and \c right are equal.
+/**
+ * Two Vector3D objects are equal if each corresponding pair of components is
+ * equal.
+ *
+ * @param left,right The Vector3D objects to compare.
+ * @return Whether \c left and \c right are equal.
+ */
+bool operator==(Vector3 const &left, Vector3 const &right);
+
+/// Checks whether \c left and \c right are not equal.
+/**
+ * Two Vector3 objects are equal if each corresponding pair of components is
+ * equal. They are therefore unequal if there is at least one unequal pair.
+ *
+ * @param left,right The Vector3 objects to compare.
+ * @return Whether \c left and \c right are not equal.
+ */
+bool operator!=(Vector3 const &left, Vector3 const &right);
+
 /// Writes the given vector to the given stream.
 /**
  * Will write the vector as (x, y, z), i.e., a space separated list of the
