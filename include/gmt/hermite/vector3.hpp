@@ -34,7 +34,7 @@ struct Vector3
 
   /// Adds the given vector to this vector.
   /**
-   * @param other The Vector3D to add to this vector.
+   * @param other The Vector3 to add to this vector.
    * @return A reference to this vector.
    */
   Vector3 &add(Vector3 const &other);
@@ -48,7 +48,7 @@ struct Vector3
 
   /// Adds the given vector to this vector.
   /**
-   * @param other The Vector3D to add to this vector.
+   * @param other The Vector3 to add to this vector.
    * @return A reference to this vector.
    */
   Vector3 &operator+=(Vector3 const &other);
@@ -62,7 +62,7 @@ struct Vector3
 
   /// Subtracts the given vector from this vector.
   /**
-   * @param other The Vector3D to subtract from this vector.
+   * @param other The Vector3 to subtract from this vector.
    * @return A reference to this vector.
    */
   Vector3 &subtract(Vector3 const &other);
@@ -76,7 +76,7 @@ struct Vector3
 
   /// Subtracts the given vector from this vector.
   /**
-   * @param other The Vector3D to subtract from this vector.
+   * @param other The Vector3 to subtract from this vector.
    * @return A reference to this vector.
    */
   Vector3 &operator-=(Vector3 const &other);
@@ -93,7 +93,7 @@ struct Vector3
    * Multiplies each component of this vector with the corresponding component
    * of \c other. Note that this is not the same as dot() or cross().
    *
-   * @param other The Vector3D to multiply this one with.
+   * @param other The Vector3 to multiply this one with.
    * @return A reference to this vector.
    */
   Vector3 &multiply(Vector3 const &other);
@@ -110,7 +110,7 @@ struct Vector3
    * Multiplies each component of this vector with the corresponding component
    * of \c other. Note that this is not the same as dot() or cross().
    *
-   * @param other The Vector3D to multiply this one with.
+   * @param other The Vector3 to multiply this one with.
    * @return A reference to this vector.
    */
   Vector3 &operator*=(Vector3 const &value);
@@ -127,7 +127,7 @@ struct Vector3
    * Divides each component of this vector by the corresponding component of
    * \c other.
    *
-   * @param other The Vector3D to divide this one by.
+   * @param other The Vector3 to divide this one by.
    * @return A reference to this vector.
    */
   Vector3 &divide(Vector3 const &other);
@@ -144,7 +144,7 @@ struct Vector3
    * Divides each component of this vector by the corresponding component of
    * \c other.
    *
-   * @param other The Vector3D to divide this one by.
+   * @param other The Vector3 to divide this one by.
    * @return A reference to this vector.
    */
   Vector3 &operator/=(Vector3 const &value);
@@ -158,7 +158,7 @@ struct Vector3
 
   /// Returns a reference to the component at the specified coordinate.
   /**
-   * Note that \c index should be a value between 0 and 2 for a Vector3D. No
+   * Note that \c index should be a value between 0 and 2 for a Vector3. No
    * bounds checks are performed.
    *
    * @param index The index of the component to access.
@@ -168,7 +168,7 @@ struct Vector3
 
   /// Returns a copy of the component at the specified coordinate.
   /**
-   * Note that \c index should be a value between 0 and 2 for a Vector3D. No
+   * Note that \c index should be a value between 0 and 2 for a Vector3. No
    * bounds checks are performed.
    *
    * @param index The index of the component to access.
@@ -205,14 +205,14 @@ struct Vector3
 
 /// Returns the addition of the \c left and \c right vectors.
 /**
- * @param left,right The Vector3D objects to add together.
+ * @param left,right The Vector3 objects to add together.
  * @return The result of adding \c left and \c right.
  */
 Vector3 add(Vector3 const &left, Vector3 const &right);
 
 /// Returns the addition of the \c left vector and the \c right value.
 /**
- * @param left The Vector3D object to add.
+ * @param left The Vector3 object to add.
  * @param right The value to add to each component of \c left.
  * @return The result of adding \c left and \c right.
  */
@@ -221,21 +221,21 @@ Vector3 add(Vector3 const &left, float right);
 /// Returns the addition of the \c left value and the \c right vector.
 /**
  * @param left The value to add to each component of \c right.
- * @param right The Vector3D object to add.
+ * @param right The Vector3 object to add.
  * @return The result of adding \c left and \c right.
  */
 Vector3 add(float left, Vector3 const &right);
 
 /// Returns the addition of the \c left and \c right vectors.
 /**
- * @param left,right The Vector3D objects to add together.
+ * @param left,right The Vector3 objects to add together.
  * @return The result of adding \c left and \c right.
  */
 Vector3 operator+(Vector3 const &left, Vector3 const &right);
 
 /// Returns the addition of the \c left vector and the \c right value.
 /**
- * @param left The Vector3D object to add.
+ * @param left The Vector3 object to add.
  * @param right The value to add to each component of \c left.
  * @return The result of adding \c left and \c right.
  */
@@ -244,22 +244,22 @@ Vector3 operator+(Vector3 const &left, float right);
 /// Returns the addition of the \c left value and the \c right vector.
 /**
  * @param left The value to add to each component of \c right.
- * @param right The Vector3D object to add.
+ * @param right The Vector3 object to add.
  * @return The result of adding \c left and \c right.
  */
 Vector3 operator+(float left, Vector3 const &right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
- * @param right The Vector3D object on the right side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
+ * @param right The Vector3 object on the right side of the subtraction.
  * @return The result of subtracting \c right from \c left.
  */
 Vector3 subtract(Vector3 const &left, Vector3 const &right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
  * @param right The value to subtract from each component of \c left.
  * @return The result of subtracting \c right from \c left.
  */
@@ -267,15 +267,15 @@ Vector3 subtract(Vector3 const &left, float right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
- * @param right The Vector3D object on the right side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
+ * @param right The Vector3 object on the right side of the subtraction.
  * @return The result of subtracting \c right from \c left.
  */
 Vector3 operator-(Vector3 const &left, Vector3 const &right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
  * @param right The value to subtract from each component of \c left.
  * @return The result of subtracting \c right from \c left.
  */
@@ -283,14 +283,14 @@ Vector3 operator-(Vector3 const &left, float right);
 
 /// Returns the component-wise multiplication of \c left and \c right.
 /**
- * @param left,right The Vector3D objects to multiply together.
+ * @param left,right The Vector3 objects to multiply together.
  * @return The component-wise multiplication of \c left and \c right.
  */
 Vector3 multiply(Vector3 const &left, Vector3 const &right);
 
 /// Returns the multiplication of the \c left vector with the \c right value.
 /**
- * @param left The Vector3D object to be multiplied.
+ * @param left The Vector3 object to be multiplied.
  * @param right The value to multiply each component of \c right with.
  * @return The result of multiplying \c left with \c right.
  */
@@ -299,21 +299,21 @@ Vector3 multiply(Vector3 const &left, float right);
 /// Returns the multiplication of the \c right vector with the \c left value.
 /**
  * @param left The value to multiply each component of \c left with.
- * @param right The Vector3D object to be multiplied.
+ * @param right The Vector3 object to be multiplied.
  * @return The result of multiplying \c right with \c left.
  */
 Vector3 multiply(float left, Vector3 const &right);
 
 /// Returns the component-wise multiplication of \c left and \c right.
 /**
- * @param left,right The Vector3D objects to multiply together.
+ * @param left,right The Vector3 objects to multiply together.
  * @return The component-wise multiplication of \c left and \c right.
  */
 Vector3 operator*(Vector3 const &left, Vector3 const &right);
 
 /// Returns the multiplication of the \c left vector with the \c right value.
 /**
- * @param left The Vector3D object to be multiplied.
+ * @param left The Vector3 object to be multiplied.
  * @param right The value to multiply each component of \c right with.
  * @return The result of multiplying \c left with \c right.
  */
@@ -322,22 +322,22 @@ Vector3 operator*(Vector3 const &left, float right);
 /// Returns the multiplication of the \c right vector with the \c left value.
 /**
  * @param left The value to multiply each component of \c left with.
- * @param right The Vector3D object to be multiplied.
+ * @param right The Vector3 object to be multiplied.
  * @return The result of multiplying \c right with \c left.
  */
 Vector3 operator*(float left, Vector3 const &right);
 
 /// Returns the component-wise division of \c left by \c right.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
- * @param right The Vector3D object on the right side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
+ * @param right The Vector3 object on the right side of the subtraction.
  * @return The result of dividing \c left by \c right.
  */
 Vector3 divide(Vector3 const &left, Vector3 const &right);
 
 /// Returns the division of \c left by \c right.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
  * @param right The value to divide each component of \c left by.
  * @return The result of dividing \c left by \c right.
  */
@@ -345,15 +345,15 @@ Vector3 divide(Vector3 const &left, float right);
 
 /// Returns the component-wise division of \c left by \c right.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
- * @param right The Vector3D object on the right side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
+ * @param right The Vector3 object on the right side of the subtraction.
  * @return The result of dividing \c left by \c right.
  */
 Vector3 operator/(Vector3 const &left, Vector3 const &right);
 
 /// Returns the division of \c left by \c right.
 /**
- * @param left The Vector3D object on the left side of the subtraction.
+ * @param left The Vector3 object on the left side of the subtraction.
  * @param right The value to divide each component of \c left by.
  * @return The result of dividing \c left by \c right.
  */
@@ -361,28 +361,28 @@ Vector3 operator/(Vector3 const &left, float right);
 
 /// Returns the negation of the given vector.
 /**
- * @param value The Vector3D object to negate.
+ * @param value The Vector3 object to negate.
  * @return The result of negating each component of \c value.
  */
 Vector3 negate(Vector3 const &value);
 
 /// Returns the negation of the given vector.
 /**
- * @param value The Vector3D object to negate.
+ * @param value The Vector3 object to negate.
  * @return The result of negating each component of \c value.
  */
 Vector3 operator-(Vector3 const &value);
 
 /// Returns the dot product of \c left and \c right.
 /**
- * @param left,right The Vector3D objects to take the dot product of.
+ * @param left,right The Vector3 objects to take the dot product of.
  * @return The dot product of \c left and \c right.
  */
 float dot(Vector3 const &left, Vector3 const &right);
 
 /// Returns the dot product of \c left and \c right.
 /**
- * @param left,right The Vector3D objects to take the cross product of.
+ * @param left,right The Vector3 objects to take the cross product of.
  * @return The cross product of \c left and \c right.
  */
 Vector3 cross(Vector3 const &left, Vector3 const &right);
@@ -391,7 +391,7 @@ Vector3 cross(Vector3 const &left, Vector3 const &right);
 /**
  * Equivalent to taking the length() of the difference.
  *
- * @param left,right The Vector3D objects get the distance between.
+ * @param left,right The Vector3 objects to get the distance between.
  * @return The distance between \c left and \c right.
  */
 float distance(Vector3 const &left, Vector3 const &right);
@@ -400,17 +400,17 @@ float distance(Vector3 const &left, Vector3 const &right);
 /**
  * Equivalent to taking the length_squared() of the difference.
  *
- * @param left,right The Vector3D objects get the squared distance between.
+ * @param left,right The Vector3 objects to get the squared distance between.
  * @return The squared distance between \c left and \c right.
  */
 float distance_squared(Vector3 const &left, Vector3 const &right);
 
 /// Checks whether \c left and \c right are equal.
 /**
- * Two Vector3D objects are equal if each corresponding pair of components is
+ * Two Vector3 objects are equal if each corresponding pair of components is
  * equal.
  *
- * @param left,right The Vector3D objects to compare.
+ * @param left,right The Vector3 objects to compare.
  * @return Whether \c left and \c right are equal.
  */
 bool operator==(Vector3 const &left, Vector3 const &right);
@@ -431,7 +431,7 @@ bool operator!=(Vector3 const &left, Vector3 const &right);
  * vector's components between parentheses.
  *
  * @param stream The output stream to write to.
- * @param vector The Vector3D object to write.
+ * @param vector The Vector3 object to write.
  * @return A reference to \c stream.
  */
 std::ostream &operator<<(std::ostream &stream, Vector3 const &vector);

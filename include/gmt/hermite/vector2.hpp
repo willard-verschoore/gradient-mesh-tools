@@ -26,7 +26,7 @@ struct Vector2
 
   /// Adds the given vector to this vector.
   /**
-   * @param other The Vector2D to add to this vector.
+   * @param other The Vector2 to add to this vector.
    * @return A reference to this vector.
    */
   Vector2 &add(Vector2 const &other);
@@ -40,7 +40,7 @@ struct Vector2
 
   /// Adds the given vector to this vector.
   /**
-   * @param other The Vector2D to add to this vector.
+   * @param other The Vector2 to add to this vector.
    * @return A reference to this vector.
    */
   Vector2 &operator+=(Vector2 const &other);
@@ -54,7 +54,7 @@ struct Vector2
 
   /// Subtracts the given vector from this vector.
   /**
-   * @param other The Vector2D to subtract from this vector.
+   * @param other The Vector2 to subtract from this vector.
    * @return A reference to this vector.
    */
   Vector2 &subtract(Vector2 const &other);
@@ -68,7 +68,7 @@ struct Vector2
 
   /// Subtracts the given vector from this vector.
   /**
-   * @param other The Vector2D to subtract from this vector.
+   * @param other The Vector2 to subtract from this vector.
    * @return A reference to this vector.
    */
   Vector2 &operator-=(Vector2 const &other);
@@ -85,7 +85,7 @@ struct Vector2
    * Multiplies each component of this vector with the corresponding component
    * of \c other. Note that this is not the same as dot().
    *
-   * @param other The Vector2D to multiply this one with.
+   * @param other The Vector2 to multiply this one with.
    * @return A reference to this vector.
    */
   Vector2 &multiply(Vector2 const &other);
@@ -102,7 +102,7 @@ struct Vector2
    * Multiplies each component of this vector with the corresponding component
    * of \c other. Note that this is not the same as dot().
    *
-   * @param other The Vector2D to multiply this one with.
+   * @param other The Vector2 to multiply this one with.
    * @return A reference to this vector.
    */
   Vector2 &operator*=(Vector2 const &value);
@@ -119,7 +119,7 @@ struct Vector2
    * Divides each component of this vector by the corresponding component of
    * \c other.
    *
-   * @param other The Vector2D to divide this one by.
+   * @param other The Vector2 to divide this one by.
    * @return A reference to this vector.
    */
   Vector2 &divide(Vector2 const &other);
@@ -136,7 +136,7 @@ struct Vector2
    * Divides each component of this vector by the corresponding component of
    * \c other.
    *
-   * @param other The Vector2D to divide this one by.
+   * @param other The Vector2 to divide this one by.
    * @return A reference to this vector.
    */
   Vector2 &operator/=(Vector2 const &value);
@@ -150,7 +150,7 @@ struct Vector2
 
   /// Returns a reference to the component at the specified coordinate.
   /**
-   * Note that \c index should be a value between 0 and 1 for a Vector2D. No
+   * Note that \c index should be a value between 0 and 1 for a Vector2. No
    * bounds checks are performed.
    *
    * @param index The index of the component to access.
@@ -160,7 +160,7 @@ struct Vector2
 
   /// Returns a copy of the component at the specified coordinate.
   /**
-   * Note that \c index should be a value between 0 and 1 for a Vector2D. No
+   * Note that \c index should be a value between 0 and 1 for a Vector2. No
    * bounds checks are performed.
    *
    * @param index The index of the component to access.
@@ -197,14 +197,14 @@ struct Vector2
 
 /// Returns the addition of the \c left and \c right vectors.
 /**
- * @param left,right The Vector2D objects to add together.
+ * @param left,right The Vector2 objects to add together.
  * @return The result of adding \c left and \c right.
  */
 Vector2 add(Vector2 const &left, Vector2 const &right);
 
 /// Returns the addition of the \c left vector and the \c right value.
 /**
- * @param left The Vector2D object to add.
+ * @param left The Vector2 object to add.
  * @param right The value to add to each component of \c left.
  * @return The result of adding \c left and \c right.
  */
@@ -213,21 +213,21 @@ Vector2 add(Vector2 const &left, float right);
 /// Returns the addition of the \c left value and the \c right vector.
 /**
  * @param left The value to add to each component of \c right.
- * @param right The Vector2D object to add.
+ * @param right The Vector2 object to add.
  * @return The result of adding \c left and \c right.
  */
 Vector2 add(float left, Vector2 const &right);
 
 /// Returns the addition of the \c left and \c right vectors.
 /**
- * @param left,right The Vector2D objects to add together.
+ * @param left,right The Vector2 objects to add together.
  * @return The result of adding \c left and \c right.
  */
 Vector2 operator+(Vector2 const &left, Vector2 const &right);
 
 /// Returns the addition of the \c left vector and the \c right value.
 /**
- * @param left The Vector2D object to add.
+ * @param left The Vector2 object to add.
  * @param right The value to add to each component of \c left.
  * @return The result of adding \c left and \c right.
  */
@@ -236,22 +236,22 @@ Vector2 operator+(Vector2 const &left, float right);
 /// Returns the addition of the \c left value and the \c right vector.
 /**
  * @param left The value to add to each component of \c right.
- * @param right The Vector2D object to add.
+ * @param right The Vector2 object to add.
  * @return The result of adding \c left and \c right.
  */
 Vector2 operator+(float left, Vector2 const &right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
- * @param right The Vector2D object on the right side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
+ * @param right The Vector2 object on the right side of the subtraction.
  * @return The result of subtracting \c right from \c left.
  */
 Vector2 subtract(Vector2 const &left, Vector2 const &right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
  * @param right The value to subtract from each component of \c left.
  * @return The result of subtracting \c right from \c left.
  */
@@ -259,15 +259,15 @@ Vector2 subtract(Vector2 const &left, float right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
- * @param right The Vector2D object on the right side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
+ * @param right The Vector2 object on the right side of the subtraction.
  * @return The result of subtracting \c right from \c left.
  */
 Vector2 operator-(Vector2 const &left, Vector2 const &right);
 
 /// Returns the result of subtracting \c right from \c left.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
  * @param right The value to subtract from each component of \c left.
  * @return The result of subtracting \c right from \c left.
  */
@@ -275,14 +275,14 @@ Vector2 operator-(Vector2 const &left, float right);
 
 /// Returns the component-wise multiplication of \c left and \c right.
 /**
- * @param left,right The Vector2D objects to multiply together.
+ * @param left,right The Vector2 objects to multiply together.
  * @return The component-wise multiplication of \c left and \c right.
  */
 Vector2 multiply(Vector2 const &left, Vector2 const &right);
 
 /// Returns the multiplication of the \c left vector with the \c right value.
 /**
- * @param left The Vector2D object to be multiplied.
+ * @param left The Vector2 object to be multiplied.
  * @param right The value to multiply each component of \c right with.
  * @return The result of multiplying \c left with \c right.
  */
@@ -291,21 +291,21 @@ Vector2 multiply(Vector2 const &left, float right);
 /// Returns the multiplication of the \c right vector with the \c left value.
 /**
  * @param left The value to multiply each component of \c left with.
- * @param right The Vector2D object to be multiplied.
+ * @param right The Vector2 object to be multiplied.
  * @return The result of multiplying \c right with \c left.
  */
 Vector2 multiply(float left, Vector2 const &right);
 
 /// Returns the component-wise multiplication of \c left and \c right.
 /**
- * @param left,right The Vector2D objects to multiply together.
+ * @param left,right The Vector2 objects to multiply together.
  * @return The component-wise multiplication of \c left and \c right.
  */
 Vector2 operator*(Vector2 const &left, Vector2 const &right);
 
 /// Returns the multiplication of the \c left vector with the \c right value.
 /**
- * @param left The Vector2D object to be multiplied.
+ * @param left The Vector2 object to be multiplied.
  * @param right The value to multiply each component of \c right with.
  * @return The result of multiplying \c left with \c right.
  */
@@ -314,22 +314,22 @@ Vector2 operator*(Vector2 const &left, float right);
 /// Returns the multiplication of the \c right vector with the \c left value.
 /**
  * @param left The value to multiply each component of \c left with.
- * @param right The Vector2D object to be multiplied.
+ * @param right The Vector2 object to be multiplied.
  * @return The result of multiplying \c right with \c left.
  */
 Vector2 operator*(float left, Vector2 const &right);
 
 /// Returns the component-wise division of \c left by \c right.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
- * @param right The Vector2D object on the right side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
+ * @param right The Vector2 object on the right side of the subtraction.
  * @return The result of dividing \c left by \c right.
  */
 Vector2 divide(Vector2 const &left, Vector2 const &right);
 
 /// Returns the division of \c left by \c right.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
  * @param right The value to divide each component of \c left by.
  * @return The result of dividing \c left by \c right.
  */
@@ -337,15 +337,15 @@ Vector2 divide(Vector2 const &left, float right);
 
 /// Returns the component-wise division of \c left by \c right.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
- * @param right The Vector2D object on the right side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
+ * @param right The Vector2 object on the right side of the subtraction.
  * @return The result of dividing \c left by \c right.
  */
 Vector2 operator/(Vector2 const &left, Vector2 const &right);
 
 /// Returns the division of \c left by \c right.
 /**
- * @param left The Vector2D object on the left side of the subtraction.
+ * @param left The Vector2 object on the left side of the subtraction.
  * @param right The value to divide each component of \c left by.
  * @return The result of dividing \c left by \c right.
  */
@@ -353,21 +353,21 @@ Vector2 operator/(Vector2 const &left, float right);
 
 /// Returns the negation of the given vector.
 /**
- * @param value The Vector2D object to negate.
+ * @param value The Vector2 object to negate.
  * @return The result of negating each component of \c value.
  */
 Vector2 negate(Vector2 const &value);
 
 /// Returns the negation of the given vector.
 /**
- * @param value The Vector2D object to negate.
+ * @param value The Vector2 object to negate.
  * @return The result of negating each component of \c value.
  */
 Vector2 operator-(Vector2 const &value);
 
 /// Returns the dot product of \c left and \c right.
 /**
- * @param left,right The Vector2D objects to take the dot product of.
+ * @param left,right The Vector2 objects to take the dot product of.
  * @return The dot product of \c left and \c right.
  */
 float dot(Vector2 const &left, Vector2 const &right);
@@ -376,7 +376,7 @@ float dot(Vector2 const &left, Vector2 const &right);
 /**
  * Equivalent to taking the length() of the difference.
  *
- * @param left,right The Vector2D objects get the distance between.
+ * @param left,right The Vector2 objects to get the distance between.
  * @return The distance between \c left and \c right.
  */
 float distance(Vector2 const &left, Vector2 const &right);
@@ -385,17 +385,17 @@ float distance(Vector2 const &left, Vector2 const &right);
 /**
  * Equivalent to taking the length_squared() of the difference.
  *
- * @param left,right The Vector2D objects get the squared distance between.
+ * @param left,right The Vector2 objects to get the squared distance between.
  * @return The squared distance between \c left and \c right.
  */
 float distance_squared(Vector2 const &left, Vector2 const &right);
 
 /// Checks whether \c left and \c right are equal.
 /**
- * Two Vector2D objects are equal if each corresponding pair of components is
+ * Two Vector2 objects are equal if each corresponding pair of components is
  * equal.
  *
- * @param left,right The Vector2D objects to compare.
+ * @param left,right The Vector2 objects to compare.
  * @return Whether \c left and \c right are equal.
  */
 bool operator==(Vector2 const &left, Vector2 const &right);
@@ -416,7 +416,7 @@ bool operator!=(Vector2 const &left, Vector2 const &right);
  * components between parentheses.
  *
  * @param stream The output stream to write to.
- * @param vector The Vector2D object to write.
+ * @param vector The Vector2 object to write.
  * @return A reference to \c stream.
  */
 std::ostream &operator<<(std::ostream &stream, Vector2 const &vector);
