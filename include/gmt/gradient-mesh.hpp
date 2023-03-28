@@ -235,19 +235,49 @@ class GradientMesh
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
 
-  /// Extracts the mesh's edge colors as a flat array of floats.
+  /// Extracts the mesh's control point colors as a flat array of floats.
   /**
+   * The colors are taken from the mesh's patch matrices, either in Hermite or
+   * Bezier form, as specified by the \c bezier parameter.
+   *
+   * The Hermite form is used by the library internally and the form provided
+   * through the patch_data() function. Only the 4 corners of a Hermite matrix
+   * are proper RGB(XY) control points though, the other elements are vectors in
+   * RGB(XY) space. This function thus only returns 4 colors per patch in the
+   * Hermite case.
+   *
+   * For Bezier patch matrices each element corresponds to a control point and
+   * is thus a valid RGB(XY) position. When \c bezier is set this function
+   * therefore returns 16 colors per patch.
+   *
+   * @param bezier Whether to get the RGB data from the Bezier form of the
+   * mesh's patches.
    * @return An array of floats where each group of three consecutive elements
-   * represents the RGB color of an edge in the mesh.
+   * represents an RGB color of a control point in the mesh.
    */
-  std::vector<float> rgb_data() const;
+  std::vector<float> rgb_data(bool bezier) const;
 
-  /// Extracts the mesh's edge colors and origins as a flat array of floats.
+  /// Extracts the mesh's control point RGBXY data as a flat array of floats.
   /**
+   * The RGBXY positions are taken from the mesh's patch matrices, either in
+   * Hermite or Bezier form, as specified by the \c bezier parameter.
+   *
+   * The Hermite form is used by the library internally and the form provided
+   * through the patch_data() function. Only the 4 corners of a Hermite matrix
+   * are proper RGBXY control points though, the other elements are vectors in
+   * RGBXY space. This function thus only returns 4 RGBXY positions per patch in
+   * the Hermite case.
+   *
+   * For Bezier patch matrices each element corresponds to a control point and
+   * is thus a valid RGBXY position. When \c bezier is set this function
+   * therefore returns 16 RGBXY positions per patch.
+   *
+   * @param bezier Whether to get the RGBXY data from the Bezier form of the
+   * mesh's patches.
    * @return An array of floats where each group of five consecutive elements
-   * represents the RGB color and XY origin position of an edge in the mesh.
+   * represents an RGB color and XY position of a control point in the mesh.
    */
-  std::vector<float> rgbxy_data() const;
+  std::vector<float> rgbxy_data(bool bezier) const;
 
   /// Extracts a palette for the gradient mesh using the RGB convex hull.
   /**
@@ -256,18 +286,24 @@ class GradientMesh
    * colors. Currently the convex hull is not simplified in the palette
    * extraction process.
    *
+   * @param bezier Whether to get the mesh's colors using the Bezier form of the
+   * mesh's patch matrices. See the documentation of rgb_data() for more
+   * details.
    * @return A palette of colors for the gradient mesh.
    */
-  std::vector<hermite::Vector3> get_palette() const;
+  std::vector<hermite::Vector3> get_palette(bool bezier) const;
 
   /// Extracts indices which can be used to draw the palette as a convex hull.
   /**
    * Should be used in conjunction with get_palette(). The indices come in pairs
    * where each pair indicates a connection between two palette colors.
    *
+   * @param bezier Whether to get the palette indices using the Bezier form of
+   * the mesh's patch matrices. Should be equivalent to the value passed to the
+   * matching get_palette() call.
    * @return Indices into the palette of colors for the gradient mesh.
    */
-  std::vector<uint32_t> get_palette_indices() const;
+  std::vector<uint32_t> get_palette_indices(bool bezier) const;
 
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**
@@ -277,12 +313,15 @@ class GradientMesh
    *
    * @param palette The palette colors to determine the weights for. Generally
    * this should be the result of get_palette().
+   * @param bezier Whether to get the mesh's RGBXY positions using the Bezier
+   * form of the mesh's patch matrices. See the documentation of rgbxy_data()
+   * for more details.
    * @return weights The weights for the palette colors which reproduce each
    * mesh color. Every P consecutive elements specify the weights for one point
    * in the mesh, where P is the number of palette colors.
    */
-  std::vector<float> get_weights(
-      std::vector<hermite::Vector3> const& palette) const;
+  std::vector<float> get_weights(std::vector<hermite::Vector3> const& palette,
+                                 bool bezier) const;
 
   /// Applies weights to a palette to obtain a recolored version of the mesh.
   /**
@@ -291,9 +330,12 @@ class GradientMesh
    * get_weights().
    * @param palette The palette with which to recolor the mesh. If this is the
    * result of get_palette() the colors of the mesh do not change.
+   * @param bezier Whether the weights were obtained using the Bezier form of
+   * the mesh's patch matrices. Should be equivalent to the value passed to the
+   * matching get_weights() call.
    */
   void recolor(std::vector<float> const& weights,
-               std::vector<hermite::Vector3> const& palette);
+               std::vector<hermite::Vector3> const& palette, bool bezier);
 
  private:
   /// Creates a new parent half-edge with the given parameters.

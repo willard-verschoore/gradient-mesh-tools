@@ -12,69 +12,89 @@ namespace gmt
 
 using namespace hermite;
 
-std::vector<float> GradientMesh::rgb_data() const
+std::vector<float> GradientMesh::rgb_data(bool bezier) const
 {
   std::vector<PatchMatrix> patches = patch_data();
-  std::vector<float> data;
-  data.reserve(3 * 4 * patches.size()); // 3D RGB data, 4 corners.
+  std::vector<float> data; // Stores resulting RGB data.
+  int increment; // Matrix loop increment, 1 for all elements, 3 for corners.
 
-  for (auto const &patch : patches)
+  // All 16 elements of a Bezier patch matrix are valid RGB(XY) positions.
+  // Each corresponds to a control point.
+  if (bezier)
   {
-    // The corners of a patch matrix store the corners of the patch. The order
-    // of the corners is chosen such that it matches the recolor() function.
-    data.push_back(patch(0, 0).color.r);
-    data.push_back(patch(0, 0).color.g);
-    data.push_back(patch(0, 0).color.b);
-    data.push_back(patch(3, 0).color.r);
-    data.push_back(patch(3, 0).color.g);
-    data.push_back(patch(3, 0).color.b);
-    data.push_back(patch(3, 3).color.r);
-    data.push_back(patch(3, 3).color.g);
-    data.push_back(patch(3, 3).color.b);
-    data.push_back(patch(0, 3).color.r);
-    data.push_back(patch(0, 3).color.g);
-    data.push_back(patch(0, 3).color.b);
+    data.reserve(3 * 16 * patches.size()); // 3D RGB data, all 16 elements.
+    increment = 1; // Used to loop over all matrix elements.
+  }
+  // Only the corners of a Hermite patch matrix are valid RGB(XY) positions.
+  // They store the corners of the patch.
+  else
+  {
+    data.reserve(3 * 4 * patches.size()); // 3D RGB data, only the 4 corners.
+    increment = 3; // Used to loop over only corner matrix elements.
+  }
+
+  // Extract the RGB positions from all patches in the mesh.
+  for (auto &patch : patches)
+  {
+    if (bezier) patch.to_bezier();
+
+    for (int r = 0; r < 4; r += increment)
+    {
+      for (int c = 0; c < 4; c += increment)
+      {
+        data.push_back(patch(r, c).color.r);
+        data.push_back(patch(r, c).color.g);
+        data.push_back(patch(r, c).color.b);
+      }
+    }
   }
 
   return data;
 }
 
-std::vector<float> GradientMesh::rgbxy_data() const
+std::vector<float> GradientMesh::rgbxy_data(bool bezier) const
 {
   std::vector<PatchMatrix> patches = patch_data();
-  std::vector<float> data;
-  data.reserve(5 * 4 * patches.size()); // 5D RGBXY data, 4 corners.
+  std::vector<float> data; // Stores resulting RGBXY data.
+  int increment; // Matrix loop increment, 1 for all elements, 3 for corners.
 
-  for (auto const &patch : patches)
+  // All 16 elements of a Bezier patch matrix are valid RGBXY positions. Each
+  // corresponds to a control point.
+  if (bezier)
   {
-    // The corners of a patch matrix store the corners of the patch. The order
-    // of the corners is chosen such that it matches the recolor() function.
-    data.push_back(patch(0, 0).color.r);
-    data.push_back(patch(0, 0).color.g);
-    data.push_back(patch(0, 0).color.b);
-    data.push_back(patch(0, 0).coords.x);
-    data.push_back(patch(0, 0).coords.y);
-    data.push_back(patch(3, 0).color.r);
-    data.push_back(patch(3, 0).color.g);
-    data.push_back(patch(3, 0).color.b);
-    data.push_back(patch(3, 0).coords.x);
-    data.push_back(patch(3, 0).coords.y);
-    data.push_back(patch(3, 3).color.r);
-    data.push_back(patch(3, 3).color.g);
-    data.push_back(patch(3, 3).color.b);
-    data.push_back(patch(3, 3).coords.x);
-    data.push_back(patch(3, 3).coords.y);
-    data.push_back(patch(0, 3).color.r);
-    data.push_back(patch(0, 3).color.g);
-    data.push_back(patch(0, 3).color.b);
-    data.push_back(patch(0, 3).coords.x);
-    data.push_back(patch(0, 3).coords.y);
+    data.reserve(3 * 16 * patches.size()); // 5D RGBXY data, all 16 elements.
+    increment = 1; // Used to loop over all matrix elements.
+  }
+  // Only the corners of a Hermite patch matrix are valid RGBXY positions. They
+  // store the corners of the patch.
+  else
+  {
+    data.reserve(3 * 4 * patches.size()); // 5D RGBXY data, only the 4 corners.
+    increment = 3; // Used to loop over only corner matrix elements.
+  }
+
+  // Extract the RGBXY positions from all patches in the mesh.
+  for (auto &patch : patches)
+  {
+    if (bezier) patch.to_bezier();
+
+    for (int r = 0; r < 4; r += increment)
+    {
+      for (int c = 0; c < 4; c += increment)
+      {
+        data.push_back(patch(r, c).color.r);
+        data.push_back(patch(r, c).color.g);
+        data.push_back(patch(r, c).color.b);
+        data.push_back(patch(r, c).coords.x);
+        data.push_back(patch(r, c).coords.y);
+      }
+    }
   }
 
   return data;
 }
 
-std::vector<Vector3> GradientMesh::get_palette() const
+std::vector<Vector3> GradientMesh::get_palette(bool bezier) const
 {
   std::vector<Vector3> palette;
 
@@ -112,7 +132,7 @@ std::vector<Vector3> GradientMesh::get_palette() const
     return palette;
   }
 
-  std::vector<float> rgb = rgb_data();
+  std::vector<float> rgb = rgb_data(bezier);
   npy_intp dims[2]{(npy_intp)rgb.size() / 3, 3};
   PyArrayObject *np_rgb =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
@@ -146,7 +166,7 @@ std::vector<Vector3> GradientMesh::get_palette() const
   return palette;
 }
 
-std::vector<uint32_t> GradientMesh::get_palette_indices() const
+std::vector<uint32_t> GradientMesh::get_palette_indices(bool bezier) const
 {
   std::vector<uint32_t> indices;
 
@@ -184,7 +204,7 @@ std::vector<uint32_t> GradientMesh::get_palette_indices() const
     return indices;
   }
 
-  std::vector<float> rgb = rgb_data();
+  std::vector<float> rgb = rgb_data(bezier);
   npy_intp dims[2]{(npy_intp)rgb.size() / 3, 3};
   PyArrayObject *np_rgb =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
@@ -220,7 +240,7 @@ std::vector<uint32_t> GradientMesh::get_palette_indices() const
 }
 
 std::vector<float> GradientMesh::get_weights(
-    std::vector<Vector3> const &palette) const
+    std::vector<Vector3> const &palette, bool bezier) const
 {
   if (!Py_IsInitialized())
   {
@@ -256,7 +276,7 @@ std::vector<float> GradientMesh::get_weights(
     return std::vector<float>(0);
   }
 
-  std::vector<float> rgbxy = rgbxy_data();
+  std::vector<float> rgbxy = rgbxy_data(bezier);
   npy_intp dims[2]{(npy_intp)rgbxy.size() / 5, 5};
   PyArrayObject *np_rgbxy =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
@@ -300,30 +320,41 @@ std::vector<float> GradientMesh::get_weights(
 }
 
 void GradientMesh::recolor(std::vector<float> const &weights,
-                           std::vector<Vector3> const &palette)
+                           std::vector<Vector3> const &palette, bool bezier)
 {
-  size_t index = 0;
-  Vector3 color = {0.0f, 0.0f, 0.0f};
+  std::vector<PatchMatrix> patches = patch_data();
+  int increment = bezier ? 1 : 3;     // 1 for all elements, 3 for just corners.
+  Vector3 color = {0.0f, 0.0f, 0.0f}; // Stores a sum of palette colors.
+  size_t index = 0;                   // Tracks the current weight vector.
 
-  for (auto const &patch : patches)
+  // Recolor the all patches in the mesh. In the Bezier case we recolor all
+  // matrix elements while in the Hermite case we only recolor the corners.
+  for (auto &patch : patches)
   {
-    // Get the sides of the patch.
-    Id<HalfEdge> sides[4];
-    sides[0] = patch.side;
-    sides[1] = edges[sides[0]].next;
-    sides[2] = edges[sides[1]].next;
-    sides[3] = edges[sides[2]].next;
+    // Convert Hermite patches to Bezier for recoloring if needed.
+    if (bezier) patch.to_bezier();
 
-    for (size_t i = 0; i < 4; ++i)
+    for (int r = 0; r < 4; r += increment)
     {
-      // Each color is a weighted sum of palette colors.
-      color = {0.0f, 0.0f, 0.0f};
-      for (size_t j = 0; j < palette.size(); ++j)
-        color += weights[index * palette.size() + j] * palette[j];
-      set_color(sides[i], color);
-      ++index;
+      for (int c = 0; c < 4; c += increment)
+      {
+        color = {0.0f, 0.0f, 0.0f};
+
+        // Each color is a weighted sum of palette colors.
+        for (size_t p = 0; p < palette.size(); ++p)
+          color += weights[index * palette.size() + p] * palette[p];
+        patch(r, c).color = color;
+
+        ++index;
+      }
     }
+
+    // Convert Bezier patches back to Hermite for submission to the mesh.
+    if (bezier) patch.to_hermite();
   }
+
+  // Send the recolored patches to the mesh.
+  read_patch_data(patches);
 }
 
 } // namespace gmt
