@@ -320,9 +320,19 @@ std::vector<float> GradientMesh::get_weights(
 }
 
 void GradientMesh::recolor(std::vector<float> const &weights,
-                           std::vector<Vector3> const &palette, bool bezier)
+                           std::vector<Vector3> const &palette)
 {
+  // We must have either one weight per Hermite patch corner, i.e. 4 per patch,
+  // or one weight per Bezier patch element, i.e. 16 per patch.
+  if (weights.size() != 4 * patch_count() &&
+      weights.size() != 16 * patch_count())
+  {
+    assert(false);
+    return;
+  }
+
   std::vector<PatchMatrix> patches = patch_data();
+  bool bezier = weights.size() == 16 * patch_count();
   int increment = bezier ? 1 : 3;     // 1 for all elements, 3 for just corners.
   Vector3 color = {0.0f, 0.0f, 0.0f}; // Stores a sum of palette colors.
   size_t index = 0;                   // Tracks the current weight vector.

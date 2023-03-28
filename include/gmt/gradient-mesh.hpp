@@ -330,12 +330,9 @@ class GradientMesh
    * get_weights().
    * @param palette The palette with which to recolor the mesh. If this is the
    * result of get_palette() the colors of the mesh do not change.
-   * @param bezier Whether the weights were obtained using the Bezier form of
-   * the mesh's patch matrices. Should be equivalent to the value passed to the
-   * matching get_weights() call.
    */
   void recolor(std::vector<float> const& weights,
-               std::vector<hermite::Vector3> const& palette, bool bezier);
+               std::vector<hermite::Vector3> const& palette);
 
  private:
   /// Creates a new parent half-edge with the given parameters.
