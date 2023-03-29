@@ -2,6 +2,7 @@ import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.spatial.qhull import QhullError
 from scipy.sparse import coo_matrix
+from quadprog import solve_qp
 
 def get_palette(rgb_data):
     try:
@@ -77,6 +78,13 @@ def star_coordinates(vertices, data):
     star = np.argmin(np.linalg.norm(vertices, axis=1))
     ## Make a mesh for the palette
     hull = ConvexHull(vertices)
+
+    # Project outside data points onto the convex hull.
+    tri = Delaunay(vertices) # For checking if data point is in hull.
+    for i in range(data.shape[0]):
+        if tri.find_simplex(data[i]) == -1: # Data point not in hull.
+            data[i] = project_to_hull(data[i], hull.equations)
+
     ## Star tessellate the faces of the convex hull
     simplices = [[star] + list(face) for face in hull.simplices if star not in face]
     barycoords = -1 * np.ones((data.shape[0], len(vertices)))
@@ -91,7 +99,28 @@ def star_coordinates(vertices, data):
 
         b = np.append(1-b.sum(axis=1)[:,None], b, axis=1)
         ## Update barycoords whenever data is inside the current simplex (with threshold).
-        mask = (b>=-1e-8).all(axis=1)
+        mask = (b>=-1e-4).all(axis=1)
         barycoords[mask] = 0.
         barycoords[np.ix_(mask,s)] = b[mask]
     return barycoords
+
+def project_to_hull(z, equations):
+    """
+    Project `z` to a convex hull defined by the hyperplane equations of its
+    facets.
+
+    Based on this Stack Overflow answer: https://stackoverflow.com/a/57631915
+
+    Arguments
+        z: array, shape (ndim,)
+        equations: array shape (nfacets, ndim + 1)
+
+    Returns
+        x: array, shape (ndim,)
+    """
+    G = np.eye(len(z), dtype=float)
+    a = np.array(z, dtype=float)
+    C = np.array(-equations[:, :-1], dtype=float)
+    b = np.array(equations[:, -1], dtype=float)
+    x, f, xu, itr, lag, act = solve_qp(G, a, C.T, b, meq=0, factorized=True)
+    return x
