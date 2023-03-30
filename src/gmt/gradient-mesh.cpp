@@ -477,14 +477,23 @@ void GradientMesh::read_curve_matrix(HalfEdge& edge, CurveMatrix const& matrix)
         handles[parent.handles[0]].tangent = matrix[2];
         handles[parent.handles[1]].tangent = -matrix[3];
       },
-      [&](Child const& child)
+      [&](Child& child)
       {
+        std::array<Id<Handle>, 2> child_handles;
+
         if (child.handles)
         {
-          auto [start, end] = child.handles.value();
-          handles[start].tangent = matrix[2];
-          handles[end].tangent = -matrix[3];
+          child_handles = child.handles.value();
         }
+        else
+        {
+          child_handles[0] = handles.add(Handle({}));
+          child_handles[1] = handles.add(Handle({}));
+          child.handles = child_handles;
+        }
+
+        handles[child_handles[0]].tangent = matrix[2];
+        handles[child_handles[1]].tangent = -matrix[3];
       },
       edge);
 }
