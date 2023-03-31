@@ -577,7 +577,7 @@ class GradientMesh
   void update_twists(Id<HalfEdge> edge,
                      std::array<hermite::Interpolant, 2> new_twists);
 
-  void read_curve_matrix(HalfEdge& edge, hermite::CurveMatrix const& matrix);
+  void read_curve_matrix(Id<HalfEdge> edge, hermite::CurveMatrix const& matrix);
   void read_patch_matrix(Patch const& patch,
                          hermite::PatchMatrix const& matrix);
 

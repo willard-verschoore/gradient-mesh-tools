@@ -463,11 +463,12 @@ std::set<float> GradientMesh::snap_points(Id<HalfEdge> edge) const
   return ret;
 }
 
-void GradientMesh::read_curve_matrix(HalfEdge& edge, CurveMatrix const& matrix)
+void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
+                                     CurveMatrix const& matrix)
 {
   // Set common edge properties.
-  edge.color = matrix[0].color;
-  edge.twist = matrix[1];
+  edges[edge].color = matrix[0].color;
+  edges[edge].twist = matrix[1];
 
   // Set parent and child specific properties.
   visit(
@@ -487,15 +488,18 @@ void GradientMesh::read_curve_matrix(HalfEdge& edge, CurveMatrix const& matrix)
         }
         else
         {
+          // Create new handles if the child edge does not have any.
           child_handles[0] = handles.add(Handle({}));
           child_handles[1] = handles.add(Handle({}));
+          handles[child_handles[0]].edge = edge;
+          handles[child_handles[1]].edge = edge;
           child.handles = child_handles;
         }
 
         handles[child_handles[0]].tangent = matrix[2];
         handles[child_handles[1]].tangent = -matrix[3];
       },
-      edge);
+      edges[edge]);
 }
 
 void GradientMesh::read_patch_matrix(Patch const& patch,
@@ -529,10 +533,10 @@ void GradientMesh::read_patch_matrix(Patch const& patch,
   CurveMatrix left_curve{
       {matrix(3, 0), -matrix(2, 1), -matrix(2, 0), -matrix(1, 0)}};
 
-  read_curve_matrix(edges[top], top_curve);
-  read_curve_matrix(edges[right], right_curve);
-  read_curve_matrix(edges[bottom], bottom_curve);
-  read_curve_matrix(edges[left], left_curve);
+  read_curve_matrix(top, top_curve);
+  read_curve_matrix(right, right_curve);
+  read_curve_matrix(bottom, bottom_curve);
+  read_curve_matrix(left, left_curve);
 }
 
 void GradientMesh::read_patch_data(std::vector<PatchMatrix> const& data)
