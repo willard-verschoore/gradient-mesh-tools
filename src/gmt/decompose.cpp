@@ -95,7 +95,7 @@ std::vector<float> GradientMesh::rgbxy_data(bool bezier) const
 }
 
 std::pair<std::vector<Vector3>, std::vector<uint32_t>>
-GradientMesh::get_palette(bool bezier) const
+GradientMesh::get_palette(size_t target_size, bool bezier) const
 {
   std::vector<Vector3> palette;
   std::vector<uint32_t> indices;
@@ -140,8 +140,9 @@ GradientMesh::get_palette(bool bezier) const
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, dims, NPY_FLOAT, reinterpret_cast<void *>(rgb.data())));
 
-  arguments = PyTuple_New(1);
+  arguments = PyTuple_New(2);
   PyTuple_SetItem(arguments, 0, reinterpret_cast<PyObject *>(np_rgb));
+  PyTuple_SetItem(arguments, 1, PyLong_FromSize_t(target_size));
   result = PyObject_CallObject(function, arguments);
   if (result == NULL)
   {

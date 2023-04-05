@@ -283,20 +283,21 @@ class GradientMesh
   /**
    * The palette is found by taking the RGB-space convex hull of all colors
    * present in the mesh. The vertices of the convex hull are the palette
-   * colors. Currently the convex hull is not simplified in the palette
-   * extraction process.
+   * colors. The convex hull is simplified to the number of vertices specified
+   * by \c target_size.
    *
    * Besides the palette color, this function also returns the palette indices.
    * The indices come in pairs where each pair indicates a connection between
    * two palette colors.
    *
+   * @param target_size The target number of palette colors.
    * @param bezier Whether to get the mesh's colors using the Bezier form of the
    * mesh's patch matrices. See the documentation of rgb_data() for more
    * details.
    * @return A pair of palette colors and indices.
    */
   std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>> get_palette(
-      bool bezier) const;
+      size_t target_size, bool bezier) const;
 
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**

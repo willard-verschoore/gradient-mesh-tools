@@ -1,12 +1,18 @@
+import cvxopt
+import itertools
 import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.spatial.qhull import QhullError
 from scipy.sparse import coo_matrix
 from quadprog import solve_qp
 
-def get_palette(rgb_data):
+def get_palette(rgb_data, target_size=None):
     try:
-        rgb_hull = ConvexHull(rgb_data)
+        if (target_size == None):
+            rgb_hull = ConvexHull(rgb_data)
+        else:
+            rgb_hull = get_simplified_hull(rgb_data, target_size)
+
         rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
         rgb_hull_indices = get_hull_indices(rgb_hull)
     except QhullError as error:
@@ -15,7 +21,7 @@ def get_palette(rgb_data):
         return np.empty(0, np.float32), np.empty(0, np.uint32)
 
     print(f"Found palette:\n{rgb_hull_vertices}")
-    return np.float32(rgb_hull_vertices), np.uint32(rgb_hull_indices)
+    return np.float32(np.clip(rgb_hull_vertices, 0, 1)), np.uint32(rgb_hull_indices)
 
 def get_weights(rgbxy_data, palette):
     try:
@@ -87,6 +93,9 @@ def project_to_hull(z, equations):
 
     Based on this Stack Overflow answer: https://stackoverflow.com/a/57631915
 
+    TODO: Consider using cvxopt.solvers.qp instead since we already use cvxopt
+    for convex hull simplification.
+
     Arguments
         z: array, shape (ndim,)
         equations: array shape (nfacets, ndim + 1)
@@ -118,3 +127,121 @@ def get_hull_indices(hull):
                     break # Avoid counting the same connection multiple times.
 
     return indices
+
+def get_hull_edges(hull):
+    edges = []
+
+    # Edges are all pairs of vertices sharing a face.
+    for face in hull.simplices:
+        edges.extend(itertools.combinations(face, 2))
+
+    # Adjacent faces produce duplicate edges which should be removed.
+    return np.unique(edges, axis=0)
+
+def get_related_faces(hull, edge):
+    related_faces = []
+
+    # Find all faces containing at least one of the edges vertices.
+    for face in hull.simplices:
+        if edge[0] in face or edge[1] in face:
+            p0 = hull.points[face[0]]
+            p1 = hull.points[face[1]]
+            p2 = hull.points[face[2]]
+            related_faces.append([p0, p1, p2])
+
+    return related_faces
+
+def get_solver_input(hull, edge):
+    """
+    Find A, b and c such that minimizing c*x subject to A*x <= b yields a point
+    x which will create a positive volume tetrahedron for each face related to
+    `edge`. A face is related to an edge if it contains at least one of the
+    edge's endpoints. `hull` should be a convex hull in 3D space such that the
+    faces are 2D triangles which can be combined with a new point x to form a 3D
+    tetrahedron.
+    """
+    A = []
+    b = []
+    c = np.zeros(3)
+
+    # Construct the constraints based on the related faces.
+    for face in get_related_faces(hull, edge):
+        # Compute the face normal vector.
+        normal = np.cross(face[1] - face[0], face[2] - face[0])
+        normal = normal / np.sqrt(np.dot(normal, normal))
+
+        A.append(normal)
+        b.append(np.dot(normal, face[0]))
+        c += normal
+
+    A = -np.asfarray(A)
+    b = -np.asfarray(b)
+    c = np.asfarray(c)
+    return A, b, c
+
+def compute_volume(faces, point):
+    volume = 0
+
+    # Sum the volume of the tetrahedra made by the faces and the point.
+    for face in faces:
+        normal = np.cross(face[1] - face[0], face[2] - face[0])
+        volume += np.abs(np.dot(normal, point - face[0])) / 6.0
+
+    return volume
+
+def remove_edge(hull):
+    min_volume = float("inf")
+    min_point = np.empty(3)
+    min_edge = [-1, -1]
+
+    for edge in get_hull_edges(hull):
+        A, b, c = get_solver_input(hull, edge)
+        cvxopt.solvers.options["show_progress"] = False
+        cvxopt.solvers.options["glpk"] = dict(msg_lev="GLP_MSG_OFF")
+        solution = cvxopt.solvers.lp(cvxopt.matrix(c), cvxopt.matrix(A), cvxopt.matrix(b), solver="glpk")
+
+        if solution["status"] != "optimal":
+            # TODO: Investigate in which cases (if any) non-optimal solutions
+            # are still useable. Perhaps as a fallback when there are no optimal
+            # solutions at all?
+            continue
+
+        # Determine how much volume the new point adds.
+        point = np.asfarray(solution["x"]).squeeze()
+        volume = compute_volume(get_related_faces(hull, edge), point)
+
+        # Keep track of the point adding the least volume.
+        if volume < min_volume:
+            min_volume = volume
+            min_point = point
+            min_edge = edge
+
+    if min_volume == float("inf"):
+        print("Unable to remove edge!")
+        return hull
+
+    # Remove the determined edge by replacing its endpoints with the new point.
+    new_hull_vertices = [vertex for vertex in hull.vertices if vertex not in min_edge]
+    new_hull_points = hull.points[new_hull_vertices]
+    new_hull_points = np.append(new_hull_points, min_point.reshape((1, 3)), axis=0)
+
+    return ConvexHull(new_hull_points)
+
+def get_simplified_hull(points, target_size):
+    # A 3D convex hull has at least 4 vertices
+    if target_size < 4:
+        target_size = 4
+
+    hull = ConvexHull(points)
+    previous_size = len(hull.vertices)
+
+    if len(hull.vertices) <= target_size:
+        return hull
+
+    while True:
+        hull = remove_edge(hull)
+
+        if len(hull.vertices) <= target_size or len(hull.vertices) == previous_size:
+            return hull
+
+        previous_size = len(hull.vertices)
