@@ -286,24 +286,17 @@ class GradientMesh
    * colors. Currently the convex hull is not simplified in the palette
    * extraction process.
    *
+   * Besides the palette color, this function also returns the palette indices.
+   * The indices come in pairs where each pair indicates a connection between
+   * two palette colors.
+   *
    * @param bezier Whether to get the mesh's colors using the Bezier form of the
    * mesh's patch matrices. See the documentation of rgb_data() for more
    * details.
-   * @return A palette of colors for the gradient mesh.
+   * @return A pair of palette colors and indices.
    */
-  std::vector<hermite::Vector3> get_palette(bool bezier) const;
-
-  /// Extracts indices which can be used to draw the palette as a convex hull.
-  /**
-   * Should be used in conjunction with get_palette(). The indices come in pairs
-   * where each pair indicates a connection between two palette colors.
-   *
-   * @param bezier Whether to get the palette indices using the Bezier form of
-   * the mesh's patch matrices. Should be equivalent to the value passed to the
-   * matching get_palette() call.
-   * @return Indices into the palette of colors for the gradient mesh.
-   */
-  std::vector<uint32_t> get_palette_indices(bool bezier) const;
+  std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>> get_palette(
+      bool bezier) const;
 
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**

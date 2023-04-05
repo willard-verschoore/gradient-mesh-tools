@@ -8,38 +8,14 @@ def get_palette(rgb_data):
     try:
         rgb_hull = ConvexHull(rgb_data)
         rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
+        rgb_hull_indices = get_hull_indices(rgb_hull)
     except QhullError as error:
         print("Encountered Qhull error:")
         print(error)
-        return np.empty(0, np.float32)
+        return np.empty(0, np.float32), np.empty(0, np.uint32)
 
     print(f"Found palette:\n{rgb_hull_vertices}")
-    return np.float32(rgb_hull_vertices)
-
-def get_palette_indices(rgb_data):
-    try:
-        rgb_hull = ConvexHull(rgb_data)
-    except QhullError as error:
-        print("Encountered Qhull error:")
-        print(error)
-        return np.empty(0, np.uint32)
-
-    vertex_count = len(rgb_hull.vertices)
-
-    rgb_hull_indices = []
-    for i in range(vertex_count - 1):
-        for j in range(i + 1, vertex_count):
-            vertex_i = rgb_hull.vertices[i]
-            vertex_j = rgb_hull.vertices[j]
-
-            # We have connections between vertices within the same simplex.
-            for simplex in rgb_hull.simplices:
-                if (vertex_i in simplex) and (vertex_j in simplex):
-                    rgb_hull_indices.append(i)
-                    rgb_hull_indices.append(j)
-                    break # Avoid counting the same connection multiple times.
-
-    return np.uint32(rgb_hull_indices)
+    return np.float32(rgb_hull_vertices), np.uint32(rgb_hull_indices)
 
 def get_weights(rgbxy_data, palette):
     try:
@@ -124,3 +100,21 @@ def project_to_hull(z, equations):
     b = np.array(equations[:, -1], dtype=float)
     x, f, xu, itr, lag, act = solve_qp(G, a, C.T, b, meq=0, factorized=True)
     return x
+
+def get_hull_indices(hull):
+    vertex_count = len(hull.vertices)
+
+    indices = []
+    for i in range(vertex_count - 1):
+        for j in range(i + 1, vertex_count):
+            vertex_i = hull.vertices[i]
+            vertex_j = hull.vertices[j]
+
+            # We have connections between vertices within the same simplex.
+            for simplex in hull.simplices:
+                if (vertex_i in simplex) and (vertex_j in simplex):
+                    indices.append(i)
+                    indices.append(j)
+                    break # Avoid counting the same connection multiple times.
+
+    return indices
