@@ -6,13 +6,9 @@ from scipy.spatial.qhull import QhullError
 from scipy.sparse import coo_matrix
 from quadprog import solve_qp
 
-def get_palette(rgb_data, target_size=None):
+def get_palette(rgb_data, target_size):
     try:
-        if (target_size == None):
-            rgb_hull = ConvexHull(rgb_data)
-        else:
-            rgb_hull = get_simplified_hull(rgb_data, target_size)
-
+        rgb_hull = get_simplified_hull(rgb_data, target_size)
         rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
         rgb_hull_indices = get_hull_indices(rgb_hull)
     except QhullError as error:
@@ -227,7 +223,46 @@ def remove_edge(hull):
 
     return ConvexHull(new_hull_points)
 
+def calculate_rmse(hull, points, weights):
+    """
+    Calculate the Root Mean Square Error (RMSE) of every point in `points`'s
+    distance to `hull`. A point inside the hull has distance 0.
+
+    The `weights` array specifies the contribution of each point to the MSE part
+    of the error. It can be interpreted as specifying the number of occurrences
+    of each point (if the points are unique).
+    """
+
+    # Stores square distances.
+    distances = np.zeros(len(points))
+
+    # Stores the sum of used weights (not all weights are used).
+    weight_sum = 0
+
+    # Delaunay tessellation for checking which points are in hull.
+    tri = Delaunay(hull.points[hull.vertices])
+    simplices = tri.find_simplex(points)
+
+    for i in range(len(points)):
+        # Skip points inside the hull.
+        if simplices[i] != -1:
+            continue
+
+        projection = project_to_hull(points[i], hull.equations)
+        distances[i] = np.dot(points[i] - projection, points[i] - projection)
+        distances[i] *= weights[i]
+        weight_sum += weights[i]
+
+    mse = np.sum(distances) / weight_sum
+    return np.sqrt(mse)
+
 def get_simplified_hull(points, target_size):
+    if target_size == 0:
+        return get_automatically_simplified_hull(points)
+    else:
+        return get_manually_simplified_hull(points, target_size)
+
+def get_manually_simplified_hull(points, target_size):
     # A 3D convex hull has at least 4 vertices
     if target_size < 4:
         target_size = 4
@@ -244,4 +279,25 @@ def get_simplified_hull(points, target_size):
         if len(hull.vertices) <= target_size or len(hull.vertices) == previous_size:
             return hull
 
+        previous_size = len(hull.vertices)
+
+def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
+    hull = ConvexHull(points)
+    previous_hull = hull
+    previous_size = len(hull.vertices)
+
+    unique_points, counts = np.unique(points, axis=0, return_counts=True)
+
+    while True:
+        hull = remove_edge(hull)
+
+        if len(hull.vertices) <= 10:
+            rmse = calculate_rmse(hull, unique_points, counts)
+            if rmse > error_threshold:
+                return previous_hull
+
+        if len(hull.vertices) == 4 or len(hull.vertices) == previous_size:
+            return hull
+
+        previous_hull = hull
         previous_size = len(hull.vertices)
