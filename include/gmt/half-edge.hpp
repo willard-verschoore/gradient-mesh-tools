@@ -51,6 +51,16 @@ struct Child
    * If not present (std::nullopt) this data is instead computed
    */
   std::optional<std::array<Id<Handle>, 2>> handles;
+
+  /// Whether this child has been given tangent handles for recoloring.
+  /**
+   * In order to properly recolor child edges the color of its tangents needs to
+   * be set as well. For a child without tangent handles this means that new
+   * handles need to be generated. This flag signals that the child's handles
+   * have been generated for this purpose and should therefore only affect the
+   * color of the edge while its position is still determined by its parent.
+   */
+  bool recolored = false;
 };
 
 /// An individual, augmented half-edge for use with `GradientMesh`es.

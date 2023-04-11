@@ -191,10 +191,25 @@ void GradientMesh::set_color(Id<HalfEdge> edge, Vector3 color)
 {
   auto& e = edges[edge];
   e.color = color;
+
   if (auto h = e.handles())
   {
-    handles[h.value()[0]].tangent.color = Vector3();
-    handles[h.value()[1]].tangent.color = Vector3();
+    // Remove temporary, color-only handles.
+    Child* child = std::get_if<Child>(&edges[edge].kind);
+    if (child && child->recolored)
+    {
+      auto [start, end] = child->handles.value();
+      handles.remove(start);
+      handles.remove(end);
+      child->handles = std::nullopt;
+      child->recolored = false;
+    }
+    // Reset normal handles.
+    else
+    {
+      handles[h.value()[0]].tangent.color = Vector3();
+      handles[h.value()[1]].tangent.color = Vector3();
+    }
   }
 }
 
@@ -292,6 +307,15 @@ std::vector<std::array<Interpolant, 2>> GradientMesh::handle_data() const
   ret.reserve(handles.size());
   for (const auto& handle : handles)
   {
+    // Skip edges with color-only handles.
+    Child const* child = std::get_if<Child>(&edges[handle.edge].kind);
+    if (child)
+      if (child->recolored) continue;
+
+    // I have no clue why, but this version causes problems:
+    // if (child && child->recolored) continue;
+    // Surely short-circuit evaluation should apply here?
+
     ret.push_back(endpoints(handle));
   }
   return ret;
@@ -355,7 +379,7 @@ std::array<Interpolant, 4> GradientMesh::edge_tangents(Id<HalfEdge> edge) const
         auto mat = curve_matrix(f.parent);
         auto t = f.interval.start;
         point = interpolate(mat, t).coords;
-        if (f.handles)
+        if (f.handles && !f.recolored)
         {
           auto [start_handle, end_handle] = f.handles.value();
           start = handles[start_handle].tangent;
@@ -368,6 +392,16 @@ std::array<Interpolant, 4> GradientMesh::edge_tangents(Id<HalfEdge> edge) const
           auto scale = length(f.interval);
           start = scale * parallel_derivative(mat, t);
           end = scale * parallel_derivative(mat, f.interval.end);
+
+          // Overwrite computed tangent colors if this edge has been recolored
+          // using GradientMesh::recolor.
+          if (f.recolored)
+          {
+            assert(f.handles); // Recolored edges must have handles.
+            auto [start_handle, end_handle] = f.handles.value();
+            start.color = handles[start_handle].tangent.color;
+            end.color = -handles[end_handle].tangent.color;
+          }
         }
       },
       e);
@@ -494,8 +528,10 @@ void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
           handles[child_handles[0]].edge = edge;
           handles[child_handles[1]].edge = edge;
           child.handles = child_handles;
+          child.recolored = true; // Mark the new handles as color-only.
         }
 
+        // TODO: Consider only overwriting the color component.
         handles[child_handles[0]].tangent = matrix[2];
         handles[child_handles[1]].tangent = -matrix[3];
       },
