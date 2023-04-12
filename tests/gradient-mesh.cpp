@@ -30,7 +30,7 @@ TEST_CASE("Reading and writing patch data", "[hermite]")
                                   (float)std::rand() / (float)RAND_MAX};
     }
   }
-  mesh.read_patch_data(patch_data);
+  mesh.read_patch_data(patch_data, true);
 
   // Verify that the mesh received the submitted patch data.
   auto new_patch_data = mesh.patch_data();

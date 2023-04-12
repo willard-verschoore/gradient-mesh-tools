@@ -513,7 +513,8 @@ std::set<float> GradientMesh::snap_points(Id<HalfEdge> edge) const
 }
 
 void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
-                                     CurveMatrix const& matrix)
+                                     CurveMatrix const& matrix,
+                                     bool create_tangents)
 {
   // Set common edge properties.
   edges[edge].color = matrix[0].color;
@@ -537,6 +538,8 @@ void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
         }
         else
         {
+          if (!create_tangents) return;
+
           // Create new handles if the child edge does not have any.
           child_handles[0] = handles.add(Handle({}));
           child_handles[1] = handles.add(Handle({}));
@@ -554,7 +557,8 @@ void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
 }
 
 void GradientMesh::read_patch_matrix(Patch const& patch,
-                                     hermite::PatchMatrix const& matrix)
+                                     hermite::PatchMatrix const& matrix,
+                                     bool create_tangents)
 {
   auto top = patch.side;
   auto right = edges[top].next;
@@ -584,20 +588,21 @@ void GradientMesh::read_patch_matrix(Patch const& patch,
   CurveMatrix left_curve{
       {matrix(3, 0), -matrix(2, 1), -matrix(2, 0), -matrix(1, 0)}};
 
-  read_curve_matrix(top, top_curve);
-  read_curve_matrix(right, right_curve);
-  read_curve_matrix(bottom, bottom_curve);
-  read_curve_matrix(left, left_curve);
+  read_curve_matrix(top, top_curve, create_tangents);
+  read_curve_matrix(right, right_curve, create_tangents);
+  read_curve_matrix(bottom, bottom_curve, create_tangents);
+  read_curve_matrix(left, left_curve, create_tangents);
 }
 
-void GradientMesh::read_patch_data(std::vector<PatchMatrix> const& data)
+void GradientMesh::read_patch_data(std::vector<PatchMatrix> const& data,
+                                   bool create_tangents)
 {
   assert(patches.size() == data.size());
 
   size_t index = 0;
   for (auto const& patch : patches)
   {
-    read_patch_matrix(patch, data[index]);
+    read_patch_matrix(patch, data[index], create_tangents);
     ++index;
   }
 }

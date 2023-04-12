@@ -261,7 +261,8 @@ std::vector<float> GradientMesh::get_weights(
 }
 
 void GradientMesh::recolor(std::vector<float> const &weights,
-                           std::vector<Vector3> const &palette)
+                           std::vector<Vector3> const &palette,
+                           bool create_tangents)
 {
   // We must have either one weight vector per Hermite patch corner, i.e. 4 per
   // patch, or one weight vector per Bezier patch element, i.e. 16 per patch.
@@ -305,7 +306,7 @@ void GradientMesh::recolor(std::vector<float> const &weights,
   }
 
   // Send the recolored patches to the mesh.
-  read_patch_data(patches);
+  read_patch_data(patches, create_tangents);
 }
 
 } // namespace gmt

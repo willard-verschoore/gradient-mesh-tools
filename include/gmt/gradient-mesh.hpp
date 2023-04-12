@@ -230,7 +230,8 @@ class GradientMesh
    *
    * @param data The PatchMatrix objects to read from.
    */
-  void read_patch_data(std::vector<hermite::PatchMatrix> const& data);
+  void read_patch_data(std::vector<hermite::PatchMatrix> const& data,
+                       bool create_tangents);
 
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
@@ -324,9 +325,14 @@ class GradientMesh
    * get_weights().
    * @param palette The palette with which to recolor the mesh. If this is the
    * result of get_palette() the colors of the mesh do not change.
+   * @param create_tangents Whether to create new tangent handles when
+   * recoloring edges that do not have any. This gives better results but may
+   * lead to issues when splitting later on. Should only be enabled when using
+   * Bezier weights.
    */
   void recolor(std::vector<float> const& weights,
-               std::vector<hermite::Vector3> const& palette);
+               std::vector<hermite::Vector3> const& palette,
+               bool create_tangents = false);
 
  private:
   /// Creates a new parent half-edge with the given parameters.
@@ -571,9 +577,10 @@ class GradientMesh
   void update_twists(Id<HalfEdge> edge,
                      std::array<hermite::Interpolant, 2> new_twists);
 
-  void read_curve_matrix(Id<HalfEdge> edge, hermite::CurveMatrix const& matrix);
-  void read_patch_matrix(Patch const& patch,
-                         hermite::PatchMatrix const& matrix);
+  void read_curve_matrix(Id<HalfEdge> edge, hermite::CurveMatrix const& matrix,
+                         bool create_tangents);
+  void read_patch_matrix(Patch const& patch, hermite::PatchMatrix const& matrix,
+                         bool create_tangents);
 
   void read_points(std::istream& input, int num_points);
   void read_handles(std::istream& input, int num_handles);
