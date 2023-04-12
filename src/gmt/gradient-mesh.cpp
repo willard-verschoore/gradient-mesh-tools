@@ -305,19 +305,34 @@ std::vector<std::array<Interpolant, 2>> GradientMesh::handle_data() const
 {
   std::vector<std::array<Interpolant, 2>> ret;
   ret.reserve(handles.size());
-  for (const auto& handle : handles)
+
+  // Looping over the edges allows us to detect and skip color-only handles.
+  for (auto it = edges.begin(); it != edges.end(); ++it)
   {
-    // Skip edges with color-only handles.
-    Child const* child = std::get_if<Child>(&edges[handle.edge].kind);
-    if (child)
-      if (child->recolored) continue;
+    // Twin edges share handles, so we skip the second instance.
+    if (it->twin && it->twin.value() < edges.get_handle(it)) continue;
 
-    // I have no clue why, but this version causes problems:
-    // if (child && child->recolored) continue;
-    // Surely short-circuit evaluation should apply here?
+    visit(
+        [&](Parent const& parent)
+        {
+          auto handle_0 = handles[parent.handles[0]];
+          auto handle_1 = handles[parent.handles[1]];
+          ret.push_back(endpoints(handle_0));
+          ret.push_back(endpoints(handle_1));
+        },
+        [&](Child const& child)
+        {
+          // Skip edges without handles or color-only handles.
+          if (!child.handles || child.recolored) return;
 
-    ret.push_back(endpoints(handle));
+          auto handle_0 = handles[child.handles.value()[0]];
+          auto handle_1 = handles[child.handles.value()[1]];
+          ret.push_back(endpoints(handle_0));
+          ret.push_back(endpoints(handle_1));
+        },
+        *it);
   }
+
   return ret;
 }
 

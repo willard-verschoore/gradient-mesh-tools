@@ -231,7 +231,7 @@ class SlotMap
    * which to get the handle.
    * @return A SlotMapHandle identifying the item at \c position if found.
    */
-  SlotMapHandle<T> get_handle(const_iterator position)
+  SlotMapHandle<T> get_handle(const_iterator position) const
   {
     std::uint32_t index = position - begin();
     for (std::uint32_t slot = 0; slot < indirection.size(); ++slot)
@@ -298,7 +298,7 @@ class SlotMap
    * @param slot The index into the indirection list to check.
    * @return Whether \c slot is valid.
    */
-  bool is_valid(std::uint32_t slot)
+  bool is_valid(std::uint32_t slot) const
   {
     return slot < indirection.size() &&
            std::find(free_list.begin(), free_list.end(), slot) ==
