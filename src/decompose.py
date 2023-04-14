@@ -4,7 +4,6 @@ import numpy as np
 from scipy.spatial import ConvexHull, Delaunay
 from scipy.spatial.qhull import QhullError
 from scipy.sparse import coo_matrix
-from quadprog import solve_qp
 
 def get_palette(rgb_data, target_size):
     try:
@@ -89,9 +88,6 @@ def project_to_hull(z, equations):
 
     Based on this Stack Overflow answer: https://stackoverflow.com/a/57631915
 
-    TODO: Consider using cvxopt.solvers.qp instead since we already use cvxopt
-    for convex hull simplification.
-
     Arguments
         z: array, shape (ndim,)
         equations: array shape (nfacets, ndim + 1)
@@ -100,11 +96,12 @@ def project_to_hull(z, equations):
         x: array, shape (ndim,)
     """
     G = np.eye(len(z), dtype=float)
-    a = np.array(z, dtype=float)
-    C = np.array(-equations[:, :-1], dtype=float)
-    b = np.array(equations[:, -1], dtype=float)
-    x, f, xu, itr, lag, act = solve_qp(G, a, C.T, b, meq=0, factorized=True)
-    return x
+    a = np.array(-z, dtype=float)
+    C = np.array(equations[:, :-1], dtype=float)
+    b = np.array(-equations[:, -1], dtype=float)
+
+    solution = cvxopt.solvers.qp(cvxopt.matrix(G), cvxopt.matrix(a), cvxopt.matrix(C), cvxopt.matrix(b))
+    return np.asfarray(solution["x"]).squeeze()
 
 def get_hull_indices(hull):
     vertex_count = len(hull.vertices)
