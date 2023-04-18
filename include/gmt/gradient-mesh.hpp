@@ -251,12 +251,27 @@ class GradientMesh
    * is thus a valid RGB(XY) position. When \c bezier is set this function
    * therefore returns 16 colors per patch.
    *
+   * The \c inactive parameter specifies whether data from the mesh's inactive
+   * edges is also included. An inactive edge is an edge which has child edges
+   * running in parallel with it. An inactive edge is not directly adjacent to
+   * any patch, instead it controls its parallel children, which are each
+   * adjacent to their own patch. This means that an inactive edge's data is not
+   * included when retrieving patch data but it may still be relevant due to the
+   * effect it has on its children.
+   *
+   * The data of a curve corresponding to an inactive edge consists of two
+   * endpoints and two tangents. Similarly to the data from the patch matrices,
+   * the tangents are only valid control points when the curve is converted to
+   * Bezier form. Therefore, when \c bezier is set each inactive edge adds 4
+   * colors and when it is not set only the 2 endpoint colors are included.
+   *
    * @param bezier Whether to get the RGB data from the Bezier form of the
    * mesh's patches.
+   * @param inactive Whether to get the RGB data from the mesh's inactive edges.
    * @return An array of floats where each group of three consecutive elements
    * represents an RGB color of a control point in the mesh.
    */
-  std::vector<float> rgb_data(bool bezier) const;
+  std::vector<float> rgb_data(bool bezier, bool inactive) const;
 
   /// Extracts the mesh's control point RGBXY data as a flat array of floats.
   /**
@@ -273,12 +288,29 @@ class GradientMesh
    * is thus a valid RGBXY position. When \c bezier is set this function
    * therefore returns 16 RGBXY positions per patch.
    *
+   * The \c inactive parameter specifies whether data from the mesh's inactive
+   * edges is also included. An inactive edge is an edge which has child edges
+   * running in parallel with it. An inactive edge is not directly adjacent to
+   * any patch, instead it controls its parallel children, which are each
+   * adjacent to their own patch. This means that an inactive edge's data is not
+   * included when retrieving patch data but it may still be relevant due to the
+   * effect it has on its children.
+   *
+   * The data of a curve corresponding to an inactive edge consists of two
+   * endpoints and two tangents. Similarly to the data from the patch matrices,
+   * the tangents are only valid control points when the curve is converted to
+   * Bezier form. Therefore, when \c bezier is set each inactive edge adds 4
+   * RGBXY positions and when it is not set only the 2 endpoint RGBXY positions
+   * are included.
+   *
    * @param bezier Whether to get the RGBXY data from the Bezier form of the
    * mesh's patches.
+   * @param inactive Whether to get the RGBXY data from the mesh's inactive
+   * edges.
    * @return An array of floats where each group of five consecutive elements
    * represents an RGB color and XY position of a control point in the mesh.
    */
-  std::vector<float> rgbxy_data(bool bezier) const;
+  std::vector<float> rgbxy_data(bool bezier, bool inactive) const;
 
   /// Extracts a palette for the gradient mesh using the RGB convex hull.
   /**
@@ -295,10 +327,12 @@ class GradientMesh
    * @param bezier Whether to get the mesh's colors using the Bezier form of the
    * mesh's patch matrices. See the documentation of rgb_data() for more
    * details.
+   * @param inactive Whether to include inactive edges when retrieving the
+   * mesh's colors. See the documentation of rgb_data() for more details.
    * @return A pair of palette colors and indices.
    */
   std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>> get_palette(
-      size_t target_size, bool bezier) const;
+      size_t target_size, bool bezier, bool inactive) const;
 
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**
@@ -311,12 +345,15 @@ class GradientMesh
    * @param bezier Whether to get the mesh's RGBXY positions using the Bezier
    * form of the mesh's patch matrices. See the documentation of rgbxy_data()
    * for more details.
+   * @param inactive Whether to include inactive edges when retrieving the
+   * mesh's RGBXY positions. See the documentation of rgbxy_data() for more
+   * details.
    * @return weights The weights for the palette colors which reproduce each
    * mesh color. Every P consecutive elements specify the weights for one point
    * in the mesh, where P is the number of palette colors.
    */
   std::vector<float> get_weights(std::vector<hermite::Vector3> const& palette,
-                                 bool bezier) const;
+                                 bool bezier, bool inactive) const;
 
   /// Applies weights to a palette to obtain a recolored version of the mesh.
   /**
@@ -325,14 +362,20 @@ class GradientMesh
    * get_weights().
    * @param palette The palette with which to recolor the mesh. If this is the
    * result of get_palette() the colors of the mesh do not change.
+   * @param bezier Whether the weights were obtained using the Bezier form of
+   * the mesh's patch matrices. Should be equivalent to the value passed to the
+   * matching get_weights() call.
+   * @param inactive Whether the weights were obtained using data from the
+   * mesh's inactive edges. Should be equivalent to the value passed to the
+   * matching get_weights() call.
    * @param create_tangents Whether to create new tangent handles when
    * recoloring edges that do not have any. This gives better results but may
    * lead to issues when splitting later on. Should only be enabled when using
    * Bezier weights.
    */
   void recolor(std::vector<float> const& weights,
-               std::vector<hermite::Vector3> const& palette,
-               bool create_tangents = false);
+               std::vector<hermite::Vector3> const& palette, bool bezier,
+               bool inactive, bool create_tangents = false);
 
  private:
   /// Creates a new parent half-edge with the given parameters.
@@ -577,6 +620,9 @@ class GradientMesh
   void update_twists(Id<HalfEdge> edge,
                      std::array<hermite::Interpolant, 2> new_twists);
 
+  void read_edge(Id<HalfEdge> edge,
+                 std::array<hermite::Interpolant, 4> const& data,
+                 bool create_tangents);
   void read_curve_matrix(Id<HalfEdge> edge, hermite::CurveMatrix const& matrix,
                          bool create_tangents);
   void read_patch_matrix(Patch const& patch, hermite::PatchMatrix const& matrix,

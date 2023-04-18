@@ -12,7 +12,7 @@ namespace gmt
 
 using namespace hermite;
 
-std::vector<float> GradientMesh::rgb_data(bool bezier) const
+std::vector<float> GradientMesh::rgb_data(bool bezier, bool inactive) const
 {
   std::vector<PatchMatrix> patches = patch_data();
   std::vector<float> data; // Stores resulting RGB data.
@@ -49,10 +49,39 @@ std::vector<float> GradientMesh::rgb_data(bool bezier) const
     }
   }
 
+  if (!inactive) return data;
+
+  // We can also include the data for "inactive" edges. These are edges which
+  // have children running in parallel. The child edges contribute directly to a
+  // patch and their data is therefore included in the previous step. The
+  // underlying parent edge contributes indirectly to its children's patches. It
+  // is therefore not included in the list of patch matrices, but it's data is
+  // important because the children determine their origins and tangents based
+  // on the parent's.
+  for (auto it = edges.begin(); it != edges.end(); ++it)
+  {
+    Id<HalfEdge> edge = edges.get_handle(it);
+
+    // Skip active, bottom level edges (leaves).
+    if (children(edge, edges).empty()) continue;
+
+    // A curve matrix looks like [origin, tangent, tangent, origin]. The
+    // tangents are only valid RGB(XY) positions in Bezier form.
+    CurveMatrix curve = curve_matrix(edge);
+    if (bezier) curve.to_bezier();
+
+    for (int i = 0; i < 4; i += increment)
+    {
+      data.push_back(curve[i].color.r);
+      data.push_back(curve[i].color.g);
+      data.push_back(curve[i].color.b);
+    }
+  }
+
   return data;
 }
 
-std::vector<float> GradientMesh::rgbxy_data(bool bezier) const
+std::vector<float> GradientMesh::rgbxy_data(bool bezier, bool inactive) const
 {
   std::vector<PatchMatrix> patches = patch_data();
   std::vector<float> data; // Stores resulting RGBXY data.
@@ -91,11 +120,42 @@ std::vector<float> GradientMesh::rgbxy_data(bool bezier) const
     }
   }
 
+  if (!inactive) return data;
+
+  // We can also include the data for "inactive" edges. These are edges which
+  // have children running in parallel. The child edges contribute directly to a
+  // patch and their data is therefore included in the previous step. The
+  // underlying parent edge contributes indirectly to its children's patches. It
+  // is therefore not included in the list of patch matrices, but it's data is
+  // important because the children determine their origins and tangents based
+  // on the parent's.
+  for (auto it = edges.begin(); it != edges.end(); ++it)
+  {
+    Id<HalfEdge> edge = edges.get_handle(it);
+
+    // Skip active, bottom level edges (leaves).
+    if (children(edge, edges).empty()) continue;
+
+    // A curve matrix looks like [origin, tangent, tangent, origin]. The
+    // tangents are only valid RGBXY positions in Bezier form.
+    CurveMatrix curve = curve_matrix(edge);
+    if (bezier) curve.to_bezier();
+
+    for (int i = 0; i < 4; i += increment)
+    {
+      data.push_back(curve[i].color.r);
+      data.push_back(curve[i].color.g);
+      data.push_back(curve[i].color.b);
+      data.push_back(curve[i].coords.x);
+      data.push_back(curve[i].coords.y);
+    }
+  }
+
   return data;
 }
 
 std::pair<std::vector<Vector3>, std::vector<uint32_t>>
-GradientMesh::get_palette(size_t target_size, bool bezier) const
+GradientMesh::get_palette(size_t target_size, bool bezier, bool inactive) const
 {
   std::vector<Vector3> palette;
   std::vector<uint32_t> indices;
@@ -134,7 +194,7 @@ GradientMesh::get_palette(size_t target_size, bool bezier) const
     return std::make_pair(palette, indices);
   }
 
-  std::vector<float> rgb = rgb_data(bezier);
+  std::vector<float> rgb = rgb_data(bezier, inactive);
   npy_intp dims[2]{(npy_intp)rgb.size() / 3, 3};
   PyArrayObject *np_rgb =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
@@ -181,7 +241,7 @@ GradientMesh::get_palette(size_t target_size, bool bezier) const
 }
 
 std::vector<float> GradientMesh::get_weights(
-    std::vector<Vector3> const &palette, bool bezier) const
+    std::vector<Vector3> const &palette, bool bezier, bool inactive) const
 {
   if (!Py_IsInitialized())
   {
@@ -217,7 +277,7 @@ std::vector<float> GradientMesh::get_weights(
     return std::vector<float>(0);
   }
 
-  std::vector<float> rgbxy = rgbxy_data(bezier);
+  std::vector<float> rgbxy = rgbxy_data(bezier, inactive);
   npy_intp dims[2]{(npy_intp)rgbxy.size() / 5, 5};
   PyArrayObject *np_rgbxy =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
@@ -261,20 +321,10 @@ std::vector<float> GradientMesh::get_weights(
 }
 
 void GradientMesh::recolor(std::vector<float> const &weights,
-                           std::vector<Vector3> const &palette,
-                           bool create_tangents)
+                           std::vector<Vector3> const &palette, bool bezier,
+                           bool inactive, bool create_tangents)
 {
-  // We must have either one weight vector per Hermite patch corner, i.e. 4 per
-  // patch, or one weight vector per Bezier patch element, i.e. 16 per patch.
-  if (weights.size() != 4 * palette.size() * patch_count() &&
-      weights.size() != 16 * palette.size() * patch_count())
-  {
-    assert(false);
-    return;
-  }
-
   std::vector<PatchMatrix> patches = patch_data();
-  bool bezier = weights.size() == 16 * palette.size() * patch_count();
   int increment = bezier ? 1 : 3;     // 1 for all elements, 3 for just corners.
   Vector3 color = {0.0f, 0.0f, 0.0f}; // Stores a sum of palette colors.
   size_t index = 0;                   // Tracks the current weight vector.
@@ -306,7 +356,41 @@ void GradientMesh::recolor(std::vector<float> const &weights,
   }
 
   // Send the recolored patches to the mesh.
+  // TODO: Is this function necessary? Use read_patch_matrix in the loop above?
   read_patch_data(patches, create_tangents);
+
+  if (!inactive) return;
+
+  // Recolor inactive edges (edges with parallel children).
+  for (auto it = edges.begin(); it != edges.end(); ++it)
+  {
+    Id<HalfEdge> edge = edges.get_handle(it);
+
+    // Skip active, bottom level edges (leaves).
+    if (children(edge, edges).empty()) continue;
+
+    CurveMatrix curve = curve_matrix(edge);
+
+    // Convert Hermite curves to Bezier for recoloring if needed.
+    if (bezier) curve.to_bezier();
+
+    for (int i = 0; i < 4; i += increment)
+    {
+      color = {0.0f, 0.0f, 0.0f};
+
+      // Each color is a weighted sum of palette colors.
+      for (size_t p = 0; p < palette.size(); ++p)
+        color += weights[index * palette.size() + p] * palette[p];
+      curve[i].color = color;
+
+      ++index;
+    }
+
+    // Convert Bezier curves back to Hermite for submission to the mesh.
+    if (bezier) curve.to_hermite();
+
+    read_curve_matrix(edge, curve, create_tangents);
+  }
 }
 
 } // namespace gmt

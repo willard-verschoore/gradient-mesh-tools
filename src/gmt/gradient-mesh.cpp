@@ -512,21 +512,21 @@ std::set<float> GradientMesh::snap_points(Id<HalfEdge> edge) const
   return ret;
 }
 
-void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
-                                     CurveMatrix const& matrix,
-                                     bool create_tangents)
+void GradientMesh::read_edge(Id<HalfEdge> edge,
+                             std::array<hermite::Interpolant, 4> const& data,
+                             bool create_tangents)
 {
   // Set common edge properties.
-  edges[edge].color = matrix[0].color;
-  edges[edge].twist = matrix[1];
+  edges[edge].color = data[0].color;
+  edges[edge].twist = data[1];
 
   // Set parent and child specific properties.
   visit(
       [&](Parent const& parent)
       {
-        points[parent.origin].coords = matrix[0].coords;
-        handles[parent.handles[0]].tangent = matrix[2];
-        handles[parent.handles[1]].tangent = -matrix[3];
+        points[parent.origin].coords = data[0].coords;
+        handles[parent.handles[0]].tangent = data[2];
+        handles[parent.handles[1]].tangent = -data[3];
       },
       [&](Child& child)
       {
@@ -549,11 +549,59 @@ void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
           child.recolored = true; // Mark the new handles as color-only.
         }
 
-        // TODO: Consider only overwriting the color component.
-        handles[child_handles[0]].tangent = matrix[2];
-        handles[child_handles[1]].tangent = -matrix[3];
+        handles[child_handles[0]].tangent = data[2];
+        handles[child_handles[1]].tangent = -data[3];
       },
       edges[edge]);
+}
+
+void GradientMesh::read_curve_matrix(Id<HalfEdge> edge,
+                                     CurveMatrix const& matrix,
+                                     bool create_tangents)
+{
+  // Set common edge properties.
+  HalfEdge& current = edges[edge];
+  current.color = matrix[0].color;
+
+  // Set parent and child specific properties.
+  visit(
+      [&](Parent const& parent)
+      {
+        points[parent.origin].coords = matrix[0].coords;
+        handles[parent.handles[0]].tangent = matrix[1];
+        handles[parent.handles[1]].tangent = -matrix[2];
+      },
+      [&](Child& child)
+      {
+        std::array<Id<Handle>, 2> child_handles;
+
+        if (child.handles)
+        {
+          child_handles = child.handles.value();
+        }
+        else
+        {
+          if (!create_tangents) return;
+
+          // Create new handles if the child edge does not have any.
+          child_handles[0] = handles.add(Handle({}));
+          child_handles[1] = handles.add(Handle({}));
+          handles[child_handles[0]].edge = edge;
+          handles[child_handles[1]].edge = edge;
+          child.handles = child_handles;
+          child.recolored = true; // Mark the new handles as color-only.
+        }
+
+        handles[child_handles[0]].tangent = matrix[1];
+        handles[child_handles[1]].tangent = -matrix[2];
+      },
+      current);
+
+  // Set the endpoint of this curve (i.e. the origin of next).
+  HalfEdge& next = edges[current.next];
+  next.color = matrix[3].color;
+  Parent* parent = std::get_if<Parent>(&next.kind);
+  if (parent) points[parent->origin].coords = matrix[3].coords;
 }
 
 void GradientMesh::read_patch_matrix(Patch const& patch,
@@ -578,20 +626,20 @@ void GradientMesh::read_patch_matrix(Patch const& patch,
   // | -m2u -m2uv  m3uv m3u |
   // |   m2  -m2v  -m3v  m3 |
 
-  // Reconstruct curve matrices from the patch matrix.
-  CurveMatrix top_curve{
-      {matrix(0, 0), matrix(1, 1), matrix(0, 1), matrix(0, 2)}};
-  CurveMatrix right_curve{
-      {matrix(0, 3), -matrix(1, 2), matrix(1, 3), matrix(2, 3)}};
-  CurveMatrix bottom_curve{
-      {matrix(3, 3), matrix(2, 2), -matrix(3, 2), -matrix(3, 1)}};
-  CurveMatrix left_curve{
-      {matrix(3, 0), -matrix(2, 1), -matrix(2, 0), -matrix(1, 0)}};
+  // Reconstruct curve data from the patch matrix.
+  std::array<Interpolant, 4> top_curve{matrix(0, 0), matrix(1, 1), matrix(0, 1),
+                                       matrix(0, 2)};
+  std::array<Interpolant, 4> right_curve{matrix(0, 3), -matrix(1, 2),
+                                         matrix(1, 3), matrix(2, 3)};
+  std::array<Interpolant, 4> bottom_curve{matrix(3, 3), matrix(2, 2),
+                                          -matrix(3, 2), -matrix(3, 1)};
+  std::array<Interpolant, 4> left_curve{matrix(3, 0), -matrix(2, 1),
+                                        -matrix(2, 0), -matrix(1, 0)};
 
-  read_curve_matrix(top, top_curve, create_tangents);
-  read_curve_matrix(right, right_curve, create_tangents);
-  read_curve_matrix(bottom, bottom_curve, create_tangents);
-  read_curve_matrix(left, left_curve, create_tangents);
+  read_edge(top, top_curve, create_tangents);
+  read_edge(right, right_curve, create_tangents);
+  read_edge(bottom, bottom_curve, create_tangents);
+  read_edge(left, left_curve, create_tangents);
 }
 
 void GradientMesh::read_patch_data(std::vector<PatchMatrix> const& data,
