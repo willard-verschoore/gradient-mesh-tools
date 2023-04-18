@@ -25,6 +25,11 @@ struct CurveMatrix
 
   Interpolant &operator[](int index);
   Interpolant const &operator[](int index) const;
+
+  CurveMatrix hermite() const;
+  CurveMatrix bezier() const;
+  void to_hermite();
+  void to_bezier();
 };
 
 Interpolant dot(CurveMatrix const &left, CurveMatrix const &right);

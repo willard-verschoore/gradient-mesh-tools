@@ -4,6 +4,18 @@
 
 using namespace gmt::hermite;
 
+static CurveMatrix test_curve()
+{
+  CurveMatrix curve{{0.0f}};
+
+  curve[0] = Interpolant{Vector2(0.0f, 0.0f), Vector3(1.0f, 0.0f, 0.0f)};
+  curve[1] = Interpolant{Vector2(1.0f, 0.0f), Vector3(0.0f, 1.0f, 0.0f)};
+  curve[2] = Interpolant{Vector2(0.0f, 1.0f), Vector3(0.0f, 0.0f, 1.0f)};
+  curve[3] = Interpolant{Vector2(1.0f, 1.0f), Vector3(1.0f, 0.0f, 1.0f)};
+
+  return curve;
+}
+
 static PatchMatrix test_patch()
 {
   PatchMatrix patch{{0.0f}};
@@ -90,7 +102,23 @@ TEST_CASE("Surface interpolation at non-corner values", "[hermite]")
   CHECK(approx_eq(center, interpolate(patch, 0.5f, 0.5f)));
 }
 
-TEST_CASE("Conversion to and from Bezier representation", "[hermite]")
+TEST_CASE("Curve conversion to and from Bezier representation", "[hermite]")
+{
+  const auto curve = test_curve();
+
+  auto in_place = test_curve();
+  in_place.to_bezier();
+  in_place.to_hermite();
+  auto copy = curve.bezier().hermite();
+
+  for (int i = 0; i < 4; ++i)
+  {
+    CHECK(approx_eq(curve[i], in_place[i]));
+    CHECK(approx_eq(curve[i], copy[i]));
+  }
+}
+
+TEST_CASE("Patch conversion to and from Bezier representation", "[hermite]")
 {
   const auto patch = test_patch();
 

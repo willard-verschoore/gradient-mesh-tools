@@ -15,6 +15,28 @@ Interpolant const &CurveMatrix::operator[](int index) const
   return data[index];
 }
 
+CurveMatrix CurveMatrix::hermite() const
+{
+  return {{data[0], 3 * (data[1] - data[0]), 3 * (data[3] - data[2]), data[3]}};
+}
+
+CurveMatrix CurveMatrix::bezier() const
+{
+  return {{data[0], data[0] + data[1] / 3, data[3] - data[2] / 3, data[3]}};
+}
+
+void CurveMatrix::to_hermite()
+{
+  data[1] = 3 * (data[1] - data[0]);
+  data[2] = 3 * (data[3] - data[2]);
+}
+
+void CurveMatrix::to_bezier()
+{
+  data[1] = data[0] + data[1] / 3;
+  data[2] = data[3] - data[2] / 3;
+}
+
 Interpolant dot(CurveMatrix const &left, CurveMatrix const &right)
 {
   return left[0] * right[0] + left[1] * right[1] + left[2] * right[2] +
