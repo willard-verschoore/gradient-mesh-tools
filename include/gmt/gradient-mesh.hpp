@@ -620,11 +620,71 @@ class GradientMesh
   void update_twists(Id<HalfEdge> edge,
                      std::array<hermite::Interpolant, 2> new_twists);
 
+  /// Reads the given data into \c edge.
+  /**
+   * Here \c data should be of the form [origin, twist, handle0, handle1]. The
+   * color component of the provided origin and the entire twist vector are
+   * always read into the edge. If the edge is a parent the origin coordinates
+   * and handle vectors are also read.
+   *
+   * If \c edge is a child the origin coordinates are ignored. The handle
+   * vectors are only read if the child edge has handles already, unless the \c
+   * create_tangents option is specified. In that case new handles will be
+   * created.
+   *
+   * @param edge The edge to read the data into.
+   * @param data The Interpolant objects to read into the edge.
+   * @param create_tangents Whether to create new tangent handles for child
+   * edges that do not have them.
+   */
   void read_edge(Id<HalfEdge> edge,
                  std::array<hermite::Interpolant, 4> const& data,
                  bool create_tangents);
+
+  /// Reads the data from the given CurveMatrix object into \c edge.
+  /**
+   * Ideally, after calling this function a call to curve_matrix() for \c edge
+   * would return a CurveMatrix identical to \c data. There are some limitations
+   * to this however.
+   *
+   * This is because child edges determine their origin coordinates based on
+   * their parent. A child may also have tangent handles determined by their
+   * parent. For the latter it is possible to forcefully create new tangents to
+   * match those in \c data by setting the \c create_tangents parameter.
+   *
+   * Note that this function is similar to, but slightly different from, the
+   * read_edge() function. This function reads in a CurveMatrix containing the
+   * two endpoints of a curve and its two tangent handles. Meanwhile,
+   * read_edge() expects only the endpoint directly stored in \c edge, the same
+   * two tangent handles, and a twist vector. Broadly speaking, this function
+   * matches the mathematical definition of a Hermite curve while read_edge()
+   * matches the way a HalfEdge is defined in the code.
+   *
+   * @param edge The edge to read the data into.
+   * @param data The CurveMatrix object to read from.
+   * @param create_tangents Whether to create new tangent handles for child
+   * edges that do not have them.
+   */
   void read_curve_matrix(Id<HalfEdge> edge, hermite::CurveMatrix const& matrix,
                          bool create_tangents);
+
+  /// Reads the data from the given PatchMatrix object into \c patch.
+  /**
+   * Ideally, after calling this function a call to patch_matrix() for \c patch
+   * would return a PatchMatrix identical to \c data. There are some limitations
+   * to this however.
+   *
+   * This is because child edges in a patch determine their origin coordinates
+   * based on their parent. A child may also have tangent handles determined by
+   * their parent. For the latter it is possible to forcefully create new
+   * tangents to match those in \c data by setting the \c create_tangents
+   * parameter.
+   *
+   * @param patch The patch to read the data into.
+   * @param data The PatchMatrix object to read from.
+   * @param create_tangents Whether to create new tangent handles for child
+   * edges that do not have them.
+   */
   void read_patch_matrix(Patch const& patch, hermite::PatchMatrix const& matrix,
                          bool create_tangents);
 
