@@ -271,4 +271,11 @@ bool operator!=(PatchMatrix const &left, PatchMatrix const &right)
   return !(left == right);
 }
 
+std::ostream &operator<<(std::ostream &stream, PatchMatrix const &patch)
+{
+  for (int r = 0; r < 4; ++r)
+    for (int c = 0; c < 4; ++c)
+      stream << '(' << r << ", " << c << ") " << patch(r, c) << '\n';
+  return stream;
+}
 } // namespace gmt::hermite

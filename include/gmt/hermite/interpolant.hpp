@@ -122,4 +122,15 @@ bool operator==(Interpolant const& left, Interpolant const& right);
  */
 bool operator!=(Interpolant const& left, Interpolant const& right);
 
+/// Writes the given interpolant to the given stream.
+/**
+ * Will write the interpolant as (x, y, r, g, b), i.e., a space separated list
+ * of the interpolant's components between parentheses.
+ *
+ * @param stream The output stream to write to.
+ * @param vector The Interpolant object to write.
+ * @return A reference to \c stream.
+ */
+std::ostream& operator<<(std::ostream& stream, Interpolant const& interpolant);
+
 } // namespace gmt::hermite

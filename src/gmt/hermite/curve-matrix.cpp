@@ -55,4 +55,10 @@ bool operator!=(CurveMatrix const &left, CurveMatrix const &right)
   return !(left == right);
 }
 
+std::ostream &operator<<(std::ostream &stream, CurveMatrix const &curve)
+{
+  for (int i = 0; i < 4; ++i) stream << i << ' ' << curve[i] << '\n';
+  return stream;
+}
+
 } // namespace gmt::hermite

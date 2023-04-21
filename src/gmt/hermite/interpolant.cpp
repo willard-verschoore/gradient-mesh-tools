@@ -87,4 +87,11 @@ bool operator!=(Interpolant const& left, Interpolant const& right)
   return !(left == right);
 }
 
+std::ostream& operator<<(std::ostream& stream, Interpolant const& interpolant)
+{
+  return stream << "(" << interpolant.coords.x << ", " << interpolant.coords.y
+                << ", " << interpolant.color.r << ", " << interpolant.color.g
+                << ", " << interpolant.color.b << ")";
+}
+
 } // namespace gmt::hermite

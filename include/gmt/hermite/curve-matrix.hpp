@@ -54,4 +54,15 @@ bool operator==(CurveMatrix const &left, CurveMatrix const &right);
  */
 bool operator!=(CurveMatrix const &left, CurveMatrix const &right);
 
+/// Writes the given curve to the given stream.
+/**
+ * Will write the curve's four elements separately. Each element will be written
+ * on it's own line with a number indicating which element is being printed.
+ *
+ * @param stream The output stream to write to.
+ * @param vector The CurveMatrix object to write.
+ * @return A reference to \c stream.
+ */
+std::ostream &operator<<(std::ostream &stream, CurveMatrix const &curve);
+
 } // namespace gmt::hermite

@@ -116,4 +116,16 @@ bool operator==(PatchMatrix const &left, PatchMatrix const &right);
  */
 bool operator!=(PatchMatrix const &left, PatchMatrix const &right);
 
+/// Writes the given patch to the given stream.
+/**
+ * Will write the patch's sixteen elements row by row. Each element will be
+ * written on it's own line with a row and column number indicating which
+ * element is being printed.
+ *
+ * @param stream The output stream to write to.
+ * @param vector The PatchMatrix object to write.
+ * @return A reference to \c stream.
+ */
+std::ostream &operator<<(std::ostream &stream, PatchMatrix const &patch);
+
 } // namespace gmt::hermite
