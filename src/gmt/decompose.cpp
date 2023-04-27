@@ -12,6 +12,34 @@ namespace gmt
 
 using namespace hermite;
 
+const int GradientMesh::MAX_SAMPLING_DENSITY = 64;
+
+std::vector<Vector3> GradientMesh::sample_colors(int density) const
+{
+  density = std::max(1, density);                    // Ensure positive density.
+  density = std::min(density, MAX_SAMPLING_DENSITY); // Limit maximum density.
+
+  std::vector<Vector3> samples;
+  samples.reserve(patch_count() * (density + 1) * (density + 1));
+
+  // Sample (density + 1)^2 colors from each patch.
+  for (PatchMatrix const &patch : patch_data())
+  {
+    for (int x = 0; x <= density; ++x)
+    {
+      for (int y = 0; y <= density; ++y)
+      {
+        float u = (float)x / density;
+        float v = (float)y / density;
+        Interpolant sample = interpolate(patch, u, v);
+        samples.push_back(sample.color);
+      }
+    }
+  }
+
+  return samples;
+}
+
 std::vector<float> GradientMesh::rgb_data(bool bezier, bool inactive) const
 {
   std::vector<PatchMatrix> patches = patch_data();
@@ -155,7 +183,7 @@ std::vector<float> GradientMesh::rgbxy_data(bool bezier, bool inactive) const
 }
 
 std::pair<std::vector<Vector3>, std::vector<uint32_t>>
-GradientMesh::get_palette(size_t target_size, bool bezier, bool inactive) const
+GradientMesh::get_palette(size_t target_size, int sampling_density) const
 {
   std::vector<Vector3> palette;
   std::vector<uint32_t> indices;
@@ -194,8 +222,8 @@ GradientMesh::get_palette(size_t target_size, bool bezier, bool inactive) const
     return std::make_pair(palette, indices);
   }
 
-  std::vector<float> rgb = rgb_data(bezier, inactive);
-  npy_intp dims[2]{(npy_intp)rgb.size() / 3, 3};
+  std::vector<Vector3> rgb = sample_colors(sampling_density);
+  npy_intp dims[2]{(npy_intp)rgb.size(), 3};
   PyArrayObject *np_rgb =
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, dims, NPY_FLOAT, reinterpret_cast<void *>(rgb.data())));

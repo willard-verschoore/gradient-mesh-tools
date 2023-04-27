@@ -236,6 +236,22 @@ class GradientMesh
   void read_from_file(std::string const& file_name);
   void write_to_file(std::string const& file_name) const;
 
+  static const int MAX_SAMPLING_DENSITY;
+
+  /// Samples colors from each patch in the mesh.
+  /**
+   * Makes use of a patch's Hermite function H(u, v) to sample colors from each
+   * patch. The function samples using uniformly spaced coordinates in uv-space
+   * (i.e. from [0, 1]^2). The \c density parameter determines the number of
+   * samples to take in one axis. A density of 1 corresponds to sampling only
+   * the patch corners for a total of 4 colors per patch. In general (density +
+   * 1)^2 colors will be sampled per patch.
+   *
+   * @param density The number of samples to take per patch in each axis.
+   * @return An array of colors sampled from the mesh's patches.
+   */
+  std::vector<hermite::Vector3> sample_colors(int density = 1) const;
+
   /// Extracts the mesh's control point colors as a flat array of floats.
   /**
    * The colors are taken from the mesh's patch matrices, either in Hermite or
@@ -314,25 +330,23 @@ class GradientMesh
 
   /// Extracts a palette for the gradient mesh using the RGB convex hull.
   /**
-   * The palette is found by taking the RGB-space convex hull of all colors
-   * present in the mesh. The vertices of the convex hull are the palette
-   * colors. The convex hull is simplified to the number of vertices specified
-   * by \c target_size.
+   * The palette is found by taking the RGB-space convex hull of colors
+   * sampled from the mesh. The number of colors to sample is determined by \c
+   * sampling_density. See the documentation of sample_colors() for more
+   * details. The vertices of the convex hull are the palette colors. The convex
+   * hull is simplified to the number of vertices specified by \c target_size.
    *
    * Besides the palette color, this function also returns the palette indices.
    * The indices come in pairs where each pair indicates a connection between
    * two palette colors.
    *
    * @param target_size The target number of palette colors.
-   * @param bezier Whether to get the mesh's colors using the Bezier form of the
-   * mesh's patch matrices. See the documentation of rgb_data() for more
-   * details.
-   * @param inactive Whether to include inactive edges when retrieving the
-   * mesh's colors. See the documentation of rgb_data() for more details.
+   * @param sampling_density The density with which to sample colors from the
+   * mesh.
    * @return A pair of palette colors and indices.
    */
   std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>> get_palette(
-      size_t target_size, bool bezier, bool inactive) const;
+      size_t target_size, int sampling_density = 1) const;
 
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**
