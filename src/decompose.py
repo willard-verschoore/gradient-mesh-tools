@@ -247,6 +247,9 @@ def calculate_rmse(hull, points, weights):
     mse = np.sum(distances) / weight_sum
     return np.sqrt(mse)
 
+def project_hull_to_rgb_cube(hull):
+    hull.points[hull.vertices] = np.clip(hull.points[hull.vertices], 0, 1)
+
 def get_simplified_hull(points, target_size):
     if target_size == 0:
         return get_automatically_simplified_hull(points)
@@ -259,6 +262,7 @@ def get_manually_simplified_hull(points, target_size):
         target_size = 4
 
     hull = ConvexHull(points)
+    project_hull_to_rgb_cube(hull)
     previous_size = len(hull.vertices)
 
     if len(hull.vertices) <= target_size:
@@ -266,6 +270,7 @@ def get_manually_simplified_hull(points, target_size):
 
     while True:
         hull = remove_edge(hull)
+        project_hull_to_rgb_cube(hull)
 
         if len(hull.vertices) <= target_size or len(hull.vertices) == previous_size:
             return hull
@@ -274,6 +279,7 @@ def get_manually_simplified_hull(points, target_size):
 
 def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
     hull = ConvexHull(points)
+    project_hull_to_rgb_cube(hull)
     previous_hull = hull
     previous_size = len(hull.vertices)
 
@@ -281,6 +287,7 @@ def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
 
     while True:
         hull = remove_edge(hull)
+        project_hull_to_rgb_cube(hull)
 
         if len(hull.vertices) <= 10:
             rmse = calculate_rmse(hull, unique_points, counts)
