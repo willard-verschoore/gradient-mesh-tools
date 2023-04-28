@@ -135,12 +135,9 @@ def get_related_faces(hull, edge):
     related_faces = []
 
     # Find all faces containing at least one of the edges vertices.
-    for face in hull.simplices:
+    for index, face in enumerate(hull.simplices):
         if edge[0] in face or edge[1] in face:
-            p0 = hull.points[face[0]]
-            p1 = hull.points[face[1]]
-            p2 = hull.points[face[2]]
-            related_faces.append([p0, p1, p2])
+            related_faces.append(index)
 
     return related_faces
 
@@ -159,12 +156,11 @@ def get_solver_input(hull, edge):
 
     # Construct the constraints based on the related faces.
     for face in get_related_faces(hull, edge):
-        # Compute the face normal vector.
-        normal = np.cross(face[1] - face[0], face[2] - face[0])
-        normal = normal / np.sqrt(np.dot(normal, normal))
+        normal = hull.equations[face][0:3] # Must point outward from hull.
+        p0 = hull.points[hull.simplices[face][0]] # Get any vertex of the face.
 
         A.append(normal)
-        b.append(np.dot(normal, face[0]))
+        b.append(np.dot(normal, p0))
         c += normal
 
     A = -np.asfarray(A)
@@ -172,13 +168,14 @@ def get_solver_input(hull, edge):
     c = np.asfarray(c)
     return A, b, c
 
-def compute_volume(faces, point):
+def compute_volume(hull, faces, point):
     volume = 0
 
     # Sum the volume of the tetrahedra made by the faces and the point.
     for face in faces:
-        normal = np.cross(face[1] - face[0], face[2] - face[0])
-        volume += np.abs(np.dot(normal, point - face[0])) / 6.0
+        normal = hull.equations[face][0:3] # Must point outward from hull.
+        p0 = hull.points[hull.simplices[face][0]] # Get any vertex of the face.
+        volume += np.abs(np.dot(normal, point - p0)) / 6.0
 
     return volume
 
@@ -194,14 +191,11 @@ def remove_edge(hull):
         solution = cvxopt.solvers.lp(cvxopt.matrix(c), cvxopt.matrix(A), cvxopt.matrix(b), solver="glpk")
 
         if solution["status"] != "optimal":
-            # TODO: Investigate in which cases (if any) non-optimal solutions
-            # are still useable. Perhaps as a fallback when there are no optimal
-            # solutions at all?
             continue
 
         # Determine how much volume the new point adds.
         point = np.asfarray(solution["x"]).squeeze()
-        volume = compute_volume(get_related_faces(hull, edge), point)
+        volume = compute_volume(hull, get_related_faces(hull, edge), point)
 
         # Keep track of the point adding the least volume.
         if volume < min_volume:
