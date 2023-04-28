@@ -244,6 +244,10 @@ def calculate_rmse(hull, points, weights):
         distances[i] *= weights[i]
         weight_sum += weights[i]
 
+    # The RMSE is zero if every point is inside the hull.
+    if (weight_sum == 0):
+        return 0
+
     mse = np.sum(distances) / weight_sum
     return np.sqrt(mse)
 
