@@ -348,6 +348,27 @@ class GradientMesh
   std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>> get_palette(
       size_t target_size, int sampling_density = 1) const;
 
+  /// Optimizes a palette's vertex positions.
+  /**
+   * Tries to find a trade-off between minimizing reconstruction and
+   * representation loss. Reconstruction loss is caused by mesh colors outside
+   * of the palette hull. Representation loss is caused by palette colors far
+   * away from any mesh colors. For more details on this method, see the
+   * original paper: doi.org/10.1111/cgf.13812.
+   *
+   * To obtain more detailed results for the reconstruction and representation
+   * loss one can increase the \c sampling_density parameter. See the
+   * documentation of sample_colors() for more details. Note that this may
+   * significantly slow down the method.
+   *
+   * @param sampling_density The density with which to sample colors from the
+   * mesh.
+   * @return An optimized version of the input palette.
+   */
+  std::vector<hermite::Vector3> optimize_palette(
+      std::vector<hermite::Vector3> const& palette,
+      int sampling_density = 1) const;
+
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**
    * Uses the RGBXY-space geometry of the mesh to find weight vectors that

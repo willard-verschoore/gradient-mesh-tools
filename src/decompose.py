@@ -1,7 +1,8 @@
 import cvxopt
 import itertools
 import numpy as np
-from scipy.spatial import ConvexHull, Delaunay
+from scipy.optimize import minimize_scalar
+from scipy.spatial import ConvexHull, Delaunay, KDTree
 from scipy.spatial.qhull import QhullError
 from scipy.sparse import coo_matrix
 
@@ -303,3 +304,96 @@ def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
 
         previous_hull = hull
         previous_size = len(hull.vertices)
+
+def compute_neighbor_centers(vertices, points, tree):
+    """
+    Finds the nearest neighbors of vertices in points and computes the center of
+    each of those groupds of neighbors. The tree parameter should be a SciPy
+    KDTree constructed using KDTree(points).
+    """
+
+    # TODO: In the paper they disallow duplicate neighbors.
+    # TODO: Automatically determine a reasonable number of neighbors.
+    _, neighbors = tree.query(vertices, 3)
+    return np.mean(points[neighbors], axis=-2)
+
+def reconstruction_loss(hull, points, weights):
+    # Stores Euclidean distances.
+    distances = np.zeros(len(points))
+
+    # Delaunay tessellation for checking which points are in hull.
+    tri = Delaunay(hull.points[hull.vertices])
+    simplices = tri.find_simplex(points)
+
+    for i in range(len(points)):
+        # Skip points inside the hull.
+        if simplices[i] != -1:
+            continue
+
+        projection = project_to_hull(points[i], hull.equations)
+        distances[i] = np.sqrt(np.dot(points[i] - projection, points[i] - projection))
+        distances[i] *= weights[i]
+
+    # TODO: Note that we normalize over ALL distances, even those that are 0
+    # from points inside the hull. This is different from compute_rmse() but it
+    # does match the paper. Do we want to change this?
+    return np.sum(distances) / np.sum(weights)
+
+def representative_loss(hull, points, tree):
+    vertices = hull.points[hull.vertices]
+    centers = compute_neighbor_centers(vertices, points, tree)
+    distances = np.linalg.norm(vertices - centers, axis=1)
+    return np.sum(distances) / len(vertices)
+
+def energy_function(hull, points, tree, factor):
+    unique_points, counts = np.unique(points, axis=0, return_counts=True)
+    rec = reconstruction_loss(hull, unique_points, counts)
+    rep = representative_loss(hull, points, tree)
+    return factor * rec + rep
+
+def optimize_vertex_positions(vertices, points):
+    """
+    Optimizes a palette's vertex positions following the method described in
+    doi.org/10.1111/cgf.13812.
+    """
+    unique_points, counts = np.unique(points, axis=0, return_counts=True)
+    tree = KDTree(points) # Structure for quickly finding nearest neighbors.
+
+    # We only do one cycle.
+    for vertex in range(len(vertices)):
+        # Locate the current vertex and the center of its nearest neighbors.
+        position = vertices[vertex].copy()
+        center = compute_neighbor_centers(vertices, points, tree)[vertex]
+
+        # Don't optimize if vertex is perceptually identical to neighbor center.
+        distance = np.linalg.norm(position - center)
+        if (distance < 1.0 / 255.0):
+            continue
+
+        # The energy function to optimize. Specifies a trade-off between
+        # reconstruction loss and representation loss.
+        def energy_function(t):
+            new_position = (1 - t) * position + t * center
+            vertices[vertex] = new_position
+            hull = ConvexHull(vertices)
+
+            rec = reconstruction_loss(hull, unique_points, counts)
+            rep = representative_loss(hull, points, tree)
+            return 5 * rec + rep
+
+        # Start with a coarse, global search.
+        t_count = 10 # "k" in the paper.
+        ts = np.linspace(-0.5, 1.0, t_count)
+        energies = [energy_function(t) for t in ts]
+        min_index  = np.argmin(energies)
+
+        # Follow up with a fine, local search.
+        bounds = (ts[max(min_index - 1, 0)], ts[min(min_index + 1, t_count - 1)])
+        result = minimize_scalar(energy_function, bounds=bounds, method="bounded")
+
+        # Update the palette vertex position.
+        final_t = result["x"]
+        final_position = (1 - final_t) * position + final_t * center
+        vertices[vertex] = final_position
+
+    return vertices
