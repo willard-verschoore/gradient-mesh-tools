@@ -348,19 +348,45 @@ class GradientMesh
   std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>> get_palette(
       size_t target_size, int sampling_density = 1) const;
 
+  /// Simplifies a palette by attempting to remove one color.
+  /**
+   * Tries to remove a vertex from the palette hull by collapsing an edge into a
+   * single point. The edge collapse that leads to the smallest added volume is
+   * selected. There may be no possible edge collapses, in which case this
+   * function returns the original input palette.
+   *
+   * Besides the new palette colors, this function also returns new palette
+   * indices. The indices come in pairs where each pair indicates a connection
+   * between two palette colors.
+   *
+   * TODO: Consider making this function static or moving it out of the
+   * GradientMesh class all together. It does not use any mesh data.
+   *
+   * @param palette The palette to simplify. Generally this should be the result
+   * of get_palette().
+   * @param sampling_density The density with which to sample colors from the
+   * mesh.
+   * @return A simplified pair of palette colors and indices.
+   */
+  std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>>
+  simplify_palette(std::vector<hermite::Vector3> const& palette) const;
+
   /// Optimizes a palette's vertex positions.
   /**
    * Tries to find a trade-off between minimizing reconstruction and
    * representation loss. Reconstruction loss is caused by mesh colors outside
    * of the palette hull. Representation loss is caused by palette colors far
    * away from any mesh colors. For more details on this method, see the
-   * original paper: doi.org/10.1111/cgf.13812.
+   * original paper: <a
+   * href=https://www.doi.org/10.1111/cgf.13812>doi.org/10.1111/cgf.13812</a>.
    *
    * To obtain more detailed results for the reconstruction and representation
    * loss one can increase the \c sampling_density parameter. See the
    * documentation of sample_colors() for more details. Note that this may
    * significantly slow down the method.
    *
+   * @param palette The palette to optimize. Generally this should be the result
+   * of get_palette().
    * @param sampling_density The density with which to sample colors from the
    * mesh.
    * @return An optimized version of the input palette.

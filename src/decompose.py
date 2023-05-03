@@ -255,6 +255,16 @@ def calculate_rmse(hull, points, weights):
 def project_hull_to_rgb_cube(hull):
     hull.points[hull.vertices] = np.clip(hull.points[hull.vertices], 0, 1)
 
+def simplify_hull(vertices):
+    hull = ConvexHull(vertices)
+    hull = remove_edge(hull)
+
+    hull_vertices = np.clip(hull.points[hull.vertices], 0, 1)
+    hull_indices = get_hull_indices(hull)
+
+    print(f"Found palette:\n{hull_vertices}")
+    return np.float32(hull_vertices), np.uint32(hull_indices)
+
 def get_simplified_hull(points, target_size):
     if target_size == 0:
         return get_automatically_simplified_hull(points)

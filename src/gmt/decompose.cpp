@@ -268,6 +268,94 @@ GradientMesh::get_palette(size_t target_size, int sampling_density) const
   return std::make_pair(palette, indices);
 }
 
+std::pair<std::vector<hermite::Vector3>, std::vector<uint32_t>>
+GradientMesh::simplify_palette(
+    std::vector<hermite::Vector3> const &palette) const
+{
+  std::vector<Vector3> simplified_palette;
+  std::vector<uint32_t> simplified_indices;
+
+  if (!Py_IsInitialized())
+  {
+    Py_Initialize();
+    _import_array(); // TODO: Check if < 0 like in import_array() macro.
+  }
+
+  // Load the Python module.
+  std::string module_path = std::string(GMT_ROOT) + "/src";
+  std::string module_load_command = "sys.path.append(\"" + module_path + "\")";
+  PyRun_SimpleString("import sys");
+  PyRun_SimpleString(module_load_command.c_str());
+
+  PyObject *module_name, *module, *function, *arguments, *result;
+
+  module_name = PyUnicode_FromString("decompose");
+  module = PyImport_Import(module_name);
+  Py_DECREF(module_name);
+  if (module == NULL)
+  {
+    std::cout << "decompose can not be imported\n";
+    PyErr_Print();
+    return std::make_pair(simplified_palette, simplified_indices);
+  }
+
+  function = PyObject_GetAttrString(module, "simplify_hull");
+  if (function == NULL || !PyCallable_Check(function))
+  {
+    std::cout << "simplify_hull is null or not callable\n";
+    if (PyErr_Occurred()) PyErr_Print();
+    Py_XDECREF(function);
+    Py_DECREF(module);
+    return std::make_pair(simplified_palette, simplified_indices);
+  }
+
+  npy_intp palette_dims[2]{(npy_intp)palette.size(), 3};
+  PyArrayObject *np_palette =
+      reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
+          2, palette_dims, NPY_FLOAT,
+          reinterpret_cast<void *>(const_cast<Vector3 *>(palette.data()))));
+
+  arguments = PyTuple_New(1);
+  PyTuple_SetItem(arguments, 0, reinterpret_cast<PyObject *>(np_palette));
+  result = PyObject_CallObject(function, arguments);
+  if (result == NULL)
+  {
+    std::cout << "function call went wrong\n";
+    PyErr_Print();
+    // Py_DECREF(result);
+    // Py_DECREF(arguments);
+    Py_DECREF(function);
+    Py_DECREF(module);
+    return std::make_pair(simplified_palette, simplified_indices);
+  }
+
+  PyArrayObject *np_simplified_palette =
+      reinterpret_cast<PyArrayObject *>(PyTuple_GET_ITEM(result, 0));
+  PyArrayObject *np_simplified_indices =
+      reinterpret_cast<PyArrayObject *>(PyTuple_GET_ITEM(result, 1));
+
+  Vector3 *raw_simplified_palette =
+      reinterpret_cast<Vector3 *>(PyArray_DATA(np_simplified_palette));
+  uint32_t *raw_simplified_indices =
+      reinterpret_cast<uint32_t *>(PyArray_DATA(np_simplified_indices));
+
+  uint32_t simplified_palette_size = PyArray_SIZE(np_simplified_palette) / 3;
+  for (uint32_t i = 0; i < simplified_palette_size; ++i)
+    simplified_palette.push_back(raw_simplified_palette[i]);
+
+  uint32_t simplified_indices_size = PyArray_SIZE(np_simplified_indices);
+  for (uint32_t i = 0; i < simplified_indices_size; ++i)
+    simplified_indices.push_back(raw_simplified_indices[i]);
+
+  Py_DECREF(function);
+  Py_DECREF(module);
+  Py_DECREF(np_simplified_palette);
+  Py_DECREF(np_simplified_indices);
+  // Py_FinalizeEx();
+
+  return std::make_pair(simplified_palette, simplified_indices);
+}
+
 std::vector<hermite::Vector3> GradientMesh::optimize_palette(
     std::vector<hermite::Vector3> const &palette, int sampling_density) const
 {
