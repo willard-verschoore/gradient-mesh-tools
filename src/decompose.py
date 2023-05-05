@@ -57,11 +57,13 @@ def star_coordinates(vertices, data):
     ## Make a mesh for the palette
     hull = ConvexHull(vertices)
 
+    # Use Delaunay tessellation to check which points are in the hull.
+    tri = Delaunay(hull.points[hull.vertices])
+    simplices = tri.find_simplex(data)
+    outside_indices = np.argwhere(simplices == -1).flatten()
+
     # Project outside data points onto the convex hull.
-    tri = Delaunay(vertices) # For checking if data point is in hull.
-    for i in range(data.shape[0]):
-        if tri.find_simplex(data[i]) == -1: # Data point not in hull.
-            data[i] = project_to_hull(data[i], hull.equations)
+    data[outside_indices], _ = project_to_hull(data[outside_indices], hull)
 
     ## Star tessellate the faces of the convex hull
     simplices = [[star] + list(face) for face in hull.simplices if star not in face]
@@ -82,27 +84,103 @@ def star_coordinates(vertices, data):
         barycoords[np.ix_(mask,s)] = b[mask]
     return barycoords
 
-def project_to_hull(z, equations):
+def project_points_to_triangles(points, triangles):
     """
-    Project `z` to a convex hull defined by the hyperplane equations of its
-    facets.
-
-    Based on this Stack Overflow answer: https://stackoverflow.com/a/57631915
-
-    Arguments
-        z: array, shape (ndim,)
-        equations: array shape (nfacets, ndim + 1)
-
-    Returns
-        x: array, shape (ndim,)
+    Projects an array of points to each triangle in an array of triangles.
+    Copied from: https://stackoverflow.com/a/32529589.
     """
-    G = np.eye(len(z), dtype=float)
-    a = np.array(-z, dtype=float)
-    C = np.array(equations[:, :-1], dtype=float)
-    b = np.array(-equations[:, -1], dtype=float)
+    with np.errstate(all='ignore'):
+        # Unpack triangle points.
+        p0,p1,p2 = np.asarray(triangles).swapaxes(0,1)
 
-    solution = cvxopt.solvers.qp(cvxopt.matrix(G), cvxopt.matrix(a), cvxopt.matrix(C), cvxopt.matrix(b))
-    return np.asfarray(solution["x"]).squeeze()
+        # Calculate triangle edges.
+        e0 = p1-p0
+        e1 = p2-p0
+        a = np.einsum('...i,...i', e0, e0)
+        b = np.einsum('...i,...i', e0, e1)
+        c = np.einsum('...i,...i', e1, e1)
+
+        # Calculate determinant and denominator.
+        det = a*c - b*b
+        inv_det = 1. / det
+        denom = a-2*b+c
+
+        # Project to the edges.
+        p  = p0-points[:,np.newaxis]
+        d = np.einsum('...i,...i', e0, p)
+        e = np.einsum('...i,...i', e1, p)
+        u = b*e - c*d
+        v = b*d - a*e
+
+        # Calculate numerators.
+        bd = b+d
+        ce = c+e
+        numer0 = (ce - bd) / denom
+        numer1 = (c+e-b-d) / denom
+        da = -d/a
+        ec = -e/c
+
+        # Vectorize test conditions.
+        m0 = u + v < det
+        m1 = u < 0
+        m2 = v < 0
+        m3 = d < 0
+        m4 = (a+d > b+e)
+        m5 = ce > bd
+
+        t0 =  m0 &  m1 &  m2 &  m3
+        t1 =  m0 &  m1 &  m2 & ~m3
+        t2 =  m0 &  m1 & ~m2
+        t3 =  m0 & ~m1 &  m2
+        t4 =  m0 & ~m1 & ~m2
+        t5 = ~m0 &  m1 &  m5
+        t6 = ~m0 &  m1 & ~m5
+        t7 = ~m0 &  m2 &  m4
+        t8 = ~m0 &  m2 & ~m4
+        t9 = ~m0 & ~m1 & ~m2
+
+        u = np.where(t0, np.clip(da, 0, 1), u)
+        v = np.where(t0, 0, v)
+        u = np.where(t1, 0, u)
+        v = np.where(t1, 0, v)
+        u = np.where(t2, 0, u)
+        v = np.where(t2, np.clip(ec, 0, 1), v)
+        u = np.where(t3, np.clip(da, 0, 1), u)
+        v = np.where(t3, 0, v)
+        u *= np.where(t4, inv_det, 1)
+        v *= np.where(t4, inv_det, 1)
+        u = np.where(t5, np.clip(numer0, 0, 1), u)
+        v = np.where(t5, 1 - u, v)
+        u = np.where(t6, 0, u)
+        v = np.where(t6, 1, v)
+        u = np.where(t7, np.clip(numer1, 0, 1), u)
+        v = np.where(t7, 1-u, v)
+        u = np.where(t8, 1, u)
+        v = np.where(t8, 0, v)
+        u = np.where(t9, np.clip(numer1, 0, 1), u)
+        v = np.where(t9, 1-u, v)
+
+        # Return closest points.
+        return (p0.T +  u[:, np.newaxis] * e0.T + v[:, np.newaxis] * e1.T).swapaxes(2,1)
+
+def project_to_hull(points, hull):
+    """
+    Projects an array of points onto a convex hull. Returns the projections and
+    their squared Euclidean distances to the original point.
+    """
+    # Project the points onto each triangular facet of the hull.
+    triangles = hull.points[hull.simplices]
+    projections = project_points_to_triangles(points, triangles)
+
+    # Determine the squared Euclidean distance of each point to its projections.
+    differences = projections - points[:, np.newaxis, :]
+    distances = np.einsum("...ij,...ij->...i", differences, differences)
+
+    # Determine for each point which triangle's projection is closest.
+    min_indices = np.argmin(distances, axis=-1)
+    min_indices = (np.arange(len(points)), min_indices)
+
+    return projections[min_indices], distances[min_indices]
 
 def get_hull_indices(hull):
     vertex_count = len(hull.vertices)
@@ -225,31 +303,22 @@ def calculate_rmse(hull, points, weights):
     of each point (if the points are unique).
     """
 
-    # Stores square distances.
-    distances = np.zeros(len(points))
-
-    # Stores the sum of used weights (not all weights are used).
-    weight_sum = 0
-
-    # Delaunay tessellation for checking which points are in hull.
+    # Use Delaunay tessellation to check which points are in the hull.
     tri = Delaunay(hull.points[hull.vertices])
     simplices = tri.find_simplex(points)
+    outside_indices = np.argwhere(simplices == -1).flatten()
 
-    for i in range(len(points)):
-        # Skip points inside the hull.
-        if simplices[i] != -1:
-            continue
-
-        projection = project_to_hull(points[i], hull.equations)
-        distances[i] = np.dot(points[i] - projection, points[i] - projection)
-        distances[i] *= weights[i]
-        weight_sum += weights[i]
-
-    # The RMSE is zero if every point is inside the hull.
-    if (weight_sum == 0):
+    # There is no error if all points are inside the hull.
+    if (outside_indices.size == 0):
         return 0
 
-    mse = np.sum(distances) / weight_sum
+    outside_points = points[outside_indices]
+    outside_weights = weights[outside_indices]
+
+    _, distances = project_to_hull(outside_points, hull) # Squared distances.
+    distances *= outside_weights # Weight the contribution of each point.
+
+    mse = np.sum(distances) / np.sum(outside_weights)
     return np.sqrt(mse)
 
 def project_hull_to_rgb_cube(hull):
@@ -328,21 +397,21 @@ def compute_neighbor_centers(vertices, points, tree):
     return np.mean(points[neighbors], axis=-2)
 
 def reconstruction_loss(hull, points, weights):
-    # Stores Euclidean distances.
-    distances = np.zeros(len(points))
-
-    # Delaunay tessellation for checking which points are in hull.
+    # Use Delaunay tessellation to check which points are in the hull.
     tri = Delaunay(hull.points[hull.vertices])
     simplices = tri.find_simplex(points)
+    outside_indices = np.argwhere(simplices == -1).flatten()
 
-    for i in range(len(points)):
-        # Skip points inside the hull.
-        if simplices[i] != -1:
-            continue
+    # There is no error if all points are inside the hull.
+    if (outside_indices.size == 0):
+        return 0
 
-        projection = project_to_hull(points[i], hull.equations)
-        distances[i] = np.sqrt(np.dot(points[i] - projection, points[i] - projection))
-        distances[i] *= weights[i]
+    outside_points = points[outside_indices]
+    outside_weights = weights[outside_indices]
+
+    _, distances = project_to_hull(outside_points, hull) # Squared distances.
+    distances = np.sqrt(distances) # Euclidean distances.
+    distances *= outside_weights # Weight the contribution of each point.
 
     # TODO: Note that we normalize over ALL distances, even those that are 0
     # from points inside the hull. This is different from compute_rmse() but it
