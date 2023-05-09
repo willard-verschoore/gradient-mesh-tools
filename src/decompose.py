@@ -430,7 +430,7 @@ def energy_function(hull, points, tree, factor):
     rep = representative_loss(hull, points, tree)
     return factor * rec + rep
 
-def optimize_vertex_positions(vertices, points):
+def optimize_vertex_positions(vertices, points, lam=10.0):
     """
     Optimizes a palette's vertex positions following the method described in
     doi.org/10.1111/cgf.13812.
@@ -458,7 +458,7 @@ def optimize_vertex_positions(vertices, points):
 
             rec = reconstruction_loss(hull, unique_points, counts)
             rep = representative_loss(hull, points, tree)
-            return 5 * rec + rep
+            return lam * rec + rep
 
         # Start with a coarse, global search.
         t_count = 10 # "k" in the paper.

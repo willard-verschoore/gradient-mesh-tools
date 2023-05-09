@@ -357,7 +357,8 @@ GradientMesh::simplify_palette(
 }
 
 std::vector<hermite::Vector3> GradientMesh::optimize_palette(
-    std::vector<hermite::Vector3> const &palette, int sampling_density) const
+    std::vector<hermite::Vector3> const &palette, double lambda,
+    int sampling_density) const
 {
   std::vector<Vector3> optimized_palette;
 
@@ -407,9 +408,10 @@ std::vector<hermite::Vector3> GradientMesh::optimize_palette(
       reinterpret_cast<PyArrayObject *>(PyArray_SimpleNewFromData(
           2, rgb_dims, NPY_FLOAT, reinterpret_cast<void *>(rgb.data())));
 
-  arguments = PyTuple_New(2);
+  arguments = PyTuple_New(3);
   PyTuple_SetItem(arguments, 0, reinterpret_cast<PyObject *>(np_palette));
   PyTuple_SetItem(arguments, 1, reinterpret_cast<PyObject *>(np_rgb));
+  PyTuple_SetItem(arguments, 2, PyFloat_FromDouble(lambda));
   result = PyObject_CallObject(function, arguments);
   if (result == NULL)
   {

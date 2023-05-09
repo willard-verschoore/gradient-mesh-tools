@@ -387,12 +387,14 @@ class GradientMesh
    *
    * @param palette The palette to optimize. Generally this should be the result
    * of get_palette().
+   * @param lambda The lambda parameter in the energy function from the original
+   * paper. Reconstruction loss is weighed more heavily for higher values.
    * @param sampling_density The density with which to sample colors from the
    * mesh.
    * @return An optimized version of the input palette.
    */
   std::vector<hermite::Vector3> optimize_palette(
-      std::vector<hermite::Vector3> const& palette,
+      std::vector<hermite::Vector3> const& palette, double lambda = 10.0f,
       int sampling_density = 1) const;
 
   /// Finds weights for the palette colors which reproduce each mesh color.
