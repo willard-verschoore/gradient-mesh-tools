@@ -1,6 +1,7 @@
 import cvxopt
 import itertools
 import numpy as np
+from enum import Enum
 from scipy.optimize import minimize_scalar
 from scipy.spatial import ConvexHull, Delaunay, KDTree
 from scipy.spatial.qhull import QhullError
@@ -19,7 +20,22 @@ def get_palette(rgb_data, target_size):
     print(f"Found palette:\n{rgb_hull_vertices}")
     return np.float32(np.clip(rgb_hull_vertices, 0, 1)), np.uint32(rgb_hull_indices)
 
-def get_weights(rgbxy_data, palette):
+class WeightType(Enum):
+    RGBXY = 0
+    MVC = 1
+
+def get_weights(rgbxy_data, palette, weight_type=WeightType.RGBXY):
+    if weight_type == WeightType.RGBXY.value:
+        weights = get_rgbxy_weights(rgbxy_data, palette)
+    elif weight_type == WeightType.MVC.value:
+        weights = get_mvc_weights(rgbxy_data[:, :3], palette)
+    else:
+        print(f"Unknown weight type: {weight_type}")
+        weights = np.empty(0, np.float32)
+
+    return weights
+
+def get_rgbxy_weights(rgbxy_data, palette):
     try:
         rgbxy_hull_vertices = rgbxy_data[ConvexHull(rgbxy_data).vertices]
         w_rgbxy = delaunay_coordinates(rgbxy_hull_vertices, rgbxy_data)
@@ -31,6 +47,124 @@ def get_weights(rgbxy_data, palette):
 
     weights = w_rgbxy.dot(w_rgb)
     return np.float32(weights)
+
+def get_mvc_weights(rgb_data, palette):
+    """
+    Determines the Mean Value Coordinates (MVCs) with respect to the palette for
+    each input color. The palette colors are interpreted as the vertices of a
+    convex hull. This yields a triangular mesh, which allows us to use the
+    techique described in doi.org/10.1145/1073204.1073229.
+    """
+    hull = ConvexHull(palette)
+    vertices = hull.points[hull.vertices]
+    simplices = consistent_winding_order_simplices(hull)
+    weights = []
+
+    for color in rgb_data:
+        weight_vector = np.zeros(len(vertices))
+
+        ds = np.linalg.norm(vertices - color, axis=1) # Distances to vertices.
+
+        # If a color is very close to a vertex we set that vertex's weight to 1.
+        min_index = np.argmin(ds)
+        if ds[min_index] < 1e-6:
+            weight_vector[min_index] = 1.0
+            weights.append(weight_vector)
+            continue
+
+        us = (vertices - color) / ds[:, np.newaxis] # Unit directions to vertices.
+
+        # Loop over every triangle of the hull.
+        for simplex in simplices:
+            d_1 = ds[simplex[0]]
+            d_2 = ds[simplex[1]]
+            d_3 = ds[simplex[2]]
+
+            u_1 = us[simplex[0]]
+            u_2 = us[simplex[1]]
+            u_3 = us[simplex[2]]
+
+            l_1 = np.linalg.norm(u_2 - u_3)
+            l_2 = np.linalg.norm(u_3 - u_1)
+            l_3 = np.linalg.norm(u_1 - u_2)
+
+            theta_1 = 2 * np.arcsin(l_1 / 2)
+            theta_2 = 2 * np.arcsin(l_2 / 2)
+            theta_3 = 2 * np.arcsin(l_3 / 2)
+
+            # Use barycentric coordinates if the color lies on the hull triangle.
+            h = (theta_1 + theta_2 + theta_3) / 2
+            if np.pi - h < 1e-6:
+                coordinates = barycentric_coordinates(hull.points[simplex], color)
+                weight_vector = np.zeros(len(vertices))
+                weight_vector[simplex] = coordinates
+                break
+
+            c_1 = (2 * np.sin(h) * np.sin(h - theta_1)) / (np.sin(theta_2) * np.sin(theta_3)) - 1
+            c_2 = (2 * np.sin(h) * np.sin(h - theta_2)) / (np.sin(theta_3) * np.sin(theta_1)) - 1
+            c_3 = (2 * np.sin(h) * np.sin(h - theta_3)) / (np.sin(theta_1) * np.sin(theta_2)) - 1
+
+            sign = np.sign(np.linalg.det(np.vstack((u_1, u_2, u_3))))
+            s_1 = sign * np.sqrt(1 - c_1 * c_1)
+            s_2 = sign * np.sqrt(1 - c_2 * c_2)
+            s_3 = sign * np.sqrt(1 - c_3 * c_3)
+
+            # Skip if the color lies outside but on the same plane as the hull triangle.
+            if np.abs(s_1) < 1e-6 or np.abs(s_2) < 1e-6 or np.abs(s_3) < 1e-6:
+                continue
+
+            w_1 = (theta_1 - c_2 * theta_3 - c_3 * theta_2) / (d_1 * np.sin(theta_2) * s_3)
+            w_2 = (theta_2 - c_3 * theta_1 - c_1 * theta_3) / (d_2 * np.sin(theta_3) * s_1)
+            w_3 = (theta_3 - c_1 * theta_2 - c_2 * theta_1) / (d_3 * np.sin(theta_1) * s_2)
+
+            weight_vector[simplex[0]] += w_1
+            weight_vector[simplex[1]] += w_2
+            weight_vector[simplex[2]] += w_3
+
+        weight_vector /= np.sum(weight_vector)
+        weights.append(weight_vector)
+
+    return np.float32(weights)
+
+def barycentric_coordinates(triangle, point):
+    edge_1 = triangle[2] - triangle[1]
+    edge_2 = triangle[0] - triangle[1]
+    edge_3 = point - triangle[1]
+    w_0 = np.linalg.norm(np.cross(edge_1, edge_3)) / np.linalg.norm(np.cross(edge_1, edge_2))
+
+    edge_1 = triangle[0] - triangle[2]
+    edge_2 = triangle[1] - triangle[2]
+    edge_3 = point - triangle[2]
+    w_1 = np.linalg.norm(np.cross(edge_1, edge_3)) / np.linalg.norm(np.cross(edge_1, edge_2))
+
+    w_2 = 1.0 - w_0 - w_1
+    return np.array([w_0, w_1, w_2])
+
+def consistent_winding_order_simplices(hull):
+    simplices = np.copy(hull.simplices)
+
+    # Find two edges for each triangle
+    edges_1 = hull.points[hull.simplices[:, 1]] - hull.points[hull.simplices[:, 0]]
+    edges_2 = hull.points[hull.simplices[:, 2]] - hull.points[hull.simplices[:, 0]]
+
+    # Infer the triangle normals from the cross product of two edges.
+    inferred_normals = np.cross(edges_1, edges_2)
+    inferred_normals /= np.linalg.norm(inferred_normals, axis=1)[:, np.newaxis]
+
+    # Compare the inferred normals with the true, outward pointing ones.
+    true_normals = hull.equations[:, 0:3] # Outward pointing normals from Qhull.
+    differences = true_normals - inferred_normals
+    magnitudes = np.einsum("...ij,...ij->...i", differences, differences) # Squared magnitude.
+
+    # If the normals point in opposite directions the squared difference is 4 (which is > 1).
+    inconsistencies = np.argwhere(magnitudes > 1).flatten()
+
+    # Swap two indices to reverse the winding order for inconsistent triangles.
+    for index in inconsistencies:
+        simplices[index, [0, 1]] = simplices[index, [1, 0]]
+
+    return simplices
+
 
 def delaunay_coordinates(vertices, data): # Adapted from Gareth Rees
     # Compute Delaunay tessellation.

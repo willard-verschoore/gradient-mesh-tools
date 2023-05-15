@@ -444,7 +444,8 @@ std::vector<hermite::Vector3> GradientMesh::optimize_palette(
 }
 
 std::vector<float> GradientMesh::get_weights(
-    std::vector<Vector3> const &palette, bool bezier, bool inactive) const
+    std::vector<Vector3> const &palette, WeightType type, bool bezier,
+    bool inactive) const
 {
   if (!Py_IsInitialized())
   {
@@ -492,9 +493,10 @@ std::vector<float> GradientMesh::get_weights(
           2, p_dims, NPY_FLOAT,
           reinterpret_cast<void *>(const_cast<Vector3 *>(palette.data()))));
 
-  arguments = PyTuple_New(2);
+  arguments = PyTuple_New(3);
   PyTuple_SetItem(arguments, 0, reinterpret_cast<PyObject *>(np_rgbxy));
   PyTuple_SetItem(arguments, 1, reinterpret_cast<PyObject *>(np_palette));
+  PyTuple_SetItem(arguments, 2, PyLong_FromLong((long)type));
   result = PyObject_CallObject(function, arguments);
   if (result == NULL)
   {

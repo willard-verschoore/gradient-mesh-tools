@@ -397,14 +397,33 @@ class GradientMesh
       std::vector<hermite::Vector3> const& palette, double lambda = 10.0f,
       int sampling_density = 1) const;
 
+  /// The different types of palette weights that are supported.
+  enum class WeightType
+  {
+    /**
+     * Weights determined based on the RGBXY-space geometry the mesh. For more
+     * details on this method, see the original paper: <a
+     * href=https://doi.org/10.1145/3272127.3275054>doi.org/10.1145/3272127.3275054</a>.
+     */
+    RGBXY,
+
+    /**
+     * Mean Value Coordinates computed from the triangular mesh corresponding to
+     * a palette's convex hull. See the following paper for more details: <a
+     * href=https://www.doi.org/10.1111/cgf.13812>doi.org/10.1111/cgf.13812</a>.
+     */
+    MVC
+  };
+
   /// Finds weights for the palette colors which reproduce each mesh color.
   /**
-   * Uses the RGBXY-space geometry of the mesh to find weight vectors that
-   * specify linear combinations of the palette colors which reproduce the
-   * colors in the mesh.
+   * Finds weight vectors that specify linear combinations of the palette colors
+   * which reproduce the colors in the mesh.
    *
    * @param palette The palette colors to determine the weights for. Generally
    * this should be the result of get_palette().
+   * @param type The type of weights to get. See the documentation of
+   * GradientMesh::WeightType for more details.
    * @param bezier Whether to get the mesh's RGBXY positions using the Bezier
    * form of the mesh's patch matrices. See the documentation of rgbxy_data()
    * for more details.
@@ -416,7 +435,8 @@ class GradientMesh
    * in the mesh, where P is the number of palette colors.
    */
   std::vector<float> get_weights(std::vector<hermite::Vector3> const& palette,
-                                 bool bezier, bool inactive) const;
+                                 WeightType type, bool bezier,
+                                 bool inactive) const;
 
   /// Applies weights to a palette to obtain a recolored version of the mesh.
   /**
