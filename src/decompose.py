@@ -9,6 +9,7 @@ from scipy.sparse import coo_matrix
 
 def get_palette(rgb_data, target_size):
     try:
+        rgb_data = np.clip(rgb_data, 0, 1)
         rgb_hull = get_simplified_hull(rgb_data, target_size)
         rgb_hull_vertices = rgb_hull.points[rgb_hull.vertices]
         rgb_hull_indices = get_hull_indices(rgb_hull)
