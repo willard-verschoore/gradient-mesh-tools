@@ -501,6 +501,10 @@ def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
     previous_hull = hull
     previous_size = len(hull.vertices)
 
+    # A 3D convex hull cannot have fewer than 4 vertices
+    if len(hull.vertices) <= 4:
+        return hull
+
     unique_points, counts = np.unique(points, axis=0, return_counts=True)
 
     while True:
