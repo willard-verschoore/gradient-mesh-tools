@@ -526,8 +526,9 @@ def compute_neighbor_centers(vertices, points, tree):
     """
 
     # TODO: In the paper they disallow duplicate neighbors.
-    # TODO: Automatically determine a reasonable number of neighbors.
-    _, neighbors = tree.query(vertices, 3)
+    neighbor_count = len(points) // 1000 # Use the paper recommended 0.1% of points.
+    neighbor_count = max(neighbor_count, 3) # Always use at least 3 points.
+    _, neighbors = tree.query(vertices, neighbor_count)
     return np.mean(points[neighbors], axis=-2)
 
 def reconstruction_loss(hull, points, weights):
