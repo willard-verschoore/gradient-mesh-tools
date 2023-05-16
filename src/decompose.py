@@ -60,6 +60,9 @@ def get_mvc_weights(rgb_data, palette):
     simplices = consistent_winding_order_simplices(hull)
     weights = []
 
+    # Project outside data points onto the convex hull.
+    rgb_data = project_outside_points_to_hull(rgb_data, hull)
+
     for color in rgb_data:
         weight_vector = np.zeros(len(vertices))
 
@@ -191,13 +194,8 @@ def star_coordinates(vertices, data):
     ## Make a mesh for the palette
     hull = ConvexHull(vertices)
 
-    # Use Delaunay tessellation to check which points are in the hull.
-    tri = Delaunay(hull.points[hull.vertices])
-    simplices = tri.find_simplex(data)
-    outside_indices = np.argwhere(simplices == -1).flatten()
-
     # Project outside data points onto the convex hull.
-    data[outside_indices], _ = project_to_hull(data[outside_indices], hull)
+    data = project_outside_points_to_hull(data, hull)
 
     ## Star tessellate the faces of the convex hull
     simplices = [[star] + list(face) for face in hull.simplices if star not in face]
@@ -315,6 +313,23 @@ def project_to_hull(points, hull):
     min_indices = (np.arange(len(points)), min_indices)
 
     return projections[min_indices], distances[min_indices]
+
+def project_outside_points_to_hull(points, hull):
+    """
+    Applies project_to_hull() only to the points outside the hull. Points already
+    inside the hull are unaltered.
+    """
+    projections = np.copy(points)
+
+    # Use Delaunay tessellation to check which points are in the hull.
+    tri = Delaunay(hull.points[hull.vertices])
+    simplices = tri.find_simplex(points)
+    outside_indices = np.argwhere(simplices == -1).flatten()
+
+    # Project outside data points onto the convex hull.
+    projections[outside_indices], _ = project_to_hull(projections[outside_indices], hull)
+
+    return projections
 
 def get_hull_indices(hull):
     vertex_count = len(hull.vertices)
