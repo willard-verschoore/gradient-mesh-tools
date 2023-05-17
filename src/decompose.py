@@ -1,6 +1,7 @@
 import cvxopt
 import itertools
 import numpy as np
+from collections import defaultdict
 from enum import Enum
 from scipy.optimize import minimize_scalar
 from scipy.spatial import ConvexHull, Delaunay, KDTree
@@ -360,61 +361,65 @@ def get_hull_edges(hull):
     # Adjacent faces produce duplicate edges which should be removed.
     return np.unique(edges, axis=0)
 
-def get_related_faces(hull, edge):
-    related_faces = []
+def get_vertex_face_neighbors(hull):
+    """
+    Finds the faces adjacent to each vertex in `hull`. The returned result is a
+    dictionary where the keys are the elements of `hull.vertices` and the values
+    are lists of indices into `hull.faces`.
+    """
+    neighbors = defaultdict(list)
 
-    # Find all faces containing at least one of the edges vertices.
     for index, face in enumerate(hull.simplices):
-        if edge[0] in face or edge[1] in face:
-            related_faces.append(index)
+        for vertex in face:
+            neighbors[vertex].append(index)
 
-    return related_faces
+    return neighbors
 
-def get_solver_input(hull, edge):
+def get_solver_input(hull, faces):
     """
     Find A, b and c such that minimizing c*x subject to A*x <= b yields a point
     x which will create a positive volume tetrahedron for each face related to
-    `edge`. A face is related to an edge if it contains at least one of the
+    an edge. A face is related to an edge if it contains at least one of the
     edge's endpoints. `hull` should be a convex hull in 3D space such that the
     faces are 2D triangles which can be combined with a new point x to form a 3D
-    tetrahedron.
+    tetrahedron. `faces` should be the faces related to an edge.
     """
-    A = []
-    b = []
-    c = np.zeros(3)
 
-    # Construct the constraints based on the related faces.
-    for face in get_related_faces(hull, edge):
-        normal = hull.equations[face][0:3] # Must point outward from hull.
-        p0 = hull.points[hull.simplices[face][0]] # Get any vertex of the face.
+    normals = hull.equations[faces, 0:3] # Must point outward from the hull.
+    p0s = hull.points[hull.simplices[faces, 0]] # Get any vertex for each face.
 
-        A.append(normal)
-        b.append(np.dot(normal, p0))
-        c += normal
-
-    A = -np.asfarray(A)
-    b = -np.asfarray(b)
-    c = np.asfarray(c)
+    A = -normals
+    b = -np.einsum("ij,ij->i", normals, p0s) # Dot product between each normal and p0.
+    c = np.sum(normals, axis=0)
     return A, b, c
 
 def compute_volume(hull, faces, point):
-    volume = 0
+    """
+    Computes the sum of the volumes of the tetrahedra made by the faces and the
+    point.
+    """
+    normals = hull.equations[faces, 0:3] # Must point outward from the hull.
+    p0s = hull.points[hull.simplices[faces, 0]] # Get any vertex for each face.
 
-    # Sum the volume of the tetrahedra made by the faces and the point.
-    for face in faces:
-        normal = hull.equations[face][0:3] # Must point outward from hull.
-        p0 = hull.points[hull.simplices[face][0]] # Get any vertex of the face.
-        volume += np.abs(np.dot(normal, point - p0)) / 6.0
-
-    return volume
+    # Volume is the sum of dot(normal, point - p0) / 6 for all normals and p0s.
+    return np.einsum("ij,ij", normals, point - p0s) / 6.0
 
 def remove_edge(hull):
     min_volume = float("inf")
     min_point = np.empty(3)
     min_edge = [-1, -1]
 
+    # Dictionary containing adjacent faces for each hull vertex.
+    vertex_face_neighbors = get_vertex_face_neighbors(hull)
+
     for edge in get_hull_edges(hull):
-        A, b, c = get_solver_input(hull, edge)
+        # Find the related faces of the edge by merging the faces related to each endpoint.
+        vertex0_face_neighbors = set(vertex_face_neighbors[edge[0]])
+        vertex1_face_neighbors = set(vertex_face_neighbors[edge[1]])
+        related_faces = list(vertex0_face_neighbors | vertex1_face_neighbors)
+
+        # Find the point of edge collapse which adds the least amount of volume.
+        A, b, c = get_solver_input(hull, related_faces)
         cvxopt.solvers.options["show_progress"] = False
         cvxopt.solvers.options["glpk"] = dict(msg_lev="GLP_MSG_OFF")
         solution = cvxopt.solvers.lp(cvxopt.matrix(c), cvxopt.matrix(A), cvxopt.matrix(b), solver="glpk")
@@ -424,7 +429,7 @@ def remove_edge(hull):
 
         # Determine how much volume the new point adds.
         point = np.asfarray(solution["x"]).squeeze()
-        volume = compute_volume(hull, get_related_faces(hull, edge), point)
+        volume = compute_volume(hull, related_faces, point)
 
         # Keep track of the point adding the least volume.
         if volume < min_volume:
@@ -495,7 +500,9 @@ def get_manually_simplified_hull(points, target_size):
     if target_size < 4:
         target_size = 4
 
-    hull = ConvexHull(points)
+    unique_points = np.unique(points, axis=0)
+
+    hull = ConvexHull(unique_points)
     project_hull_to_rgb_cube(hull)
     previous_size = len(hull.vertices)
 
@@ -512,7 +519,9 @@ def get_manually_simplified_hull(points, target_size):
         previous_size = len(hull.vertices)
 
 def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
-    hull = ConvexHull(points)
+    unique_points, counts = np.unique(points, axis=0, return_counts=True)
+
+    hull = ConvexHull(unique_points)
     project_hull_to_rgb_cube(hull)
     previous_hull = hull
     previous_size = len(hull.vertices)
@@ -520,8 +529,6 @@ def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
     # A 3D convex hull cannot have fewer than 4 vertices
     if len(hull.vertices) <= 4:
         return hull
-
-    unique_points, counts = np.unique(points, axis=0, return_counts=True)
 
     while True:
         hull = remove_edge(hull)
