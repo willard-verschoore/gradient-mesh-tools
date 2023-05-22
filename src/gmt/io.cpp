@@ -171,8 +171,11 @@ void GradientMesh::read_edges(std::istream &input, int num_edges)
       Interval child_interval{0, 0};
       tokens >> child_interval.start >> child_interval.end;
 
-      edge =
-          half_edge(parent, child_interval, child_handles, color, twist, twin);
+      bool recolored = false;
+      tokens >> recolored;
+
+      edge = half_edge(parent, child_interval, child_handles, recolored, color,
+                       twist, twin);
     }
     else
     {
@@ -311,6 +314,8 @@ void GradientMesh::write_edges(std::ostream &output) const
 
       output << child_f->interval.start << ' '; // 21
       output << child_f->interval.end << ' ';   // 22
+
+      output << child_f->recolored << ' '; // 23
     }
     else
     {

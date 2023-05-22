@@ -77,11 +77,11 @@ struct HalfEdge
 
   /// Creates a child half-edge with the given parameters.
   HalfEdge(Id<HalfEdge> parent, Interval interval,
-           std::optional<std::array<Id<Handle>, 2>> handles,
+           std::optional<std::array<Id<Handle>, 2>> handles, bool recolored,
            hermite::Vector3 color,
            hermite::Interpolant twist = hermite::Interpolant(0.0f),
            std::optional<Id<HalfEdge>> twin = std::nullopt)
-      : kind(Child{parent, interval, handles}),
+      : kind(Child{parent, interval, handles, recolored}),
         color(color),
         twist(twist),
         twin(twin)

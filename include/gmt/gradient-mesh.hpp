@@ -478,7 +478,7 @@ class GradientMesh
    */
   Id<HalfEdge> half_edge(Id<HalfEdge> parent, Interval interval,
                          std::optional<std::array<Id<Handle>, 2>> handles,
-                         hermite::Vector3 color,
+                         bool recolored, hermite::Vector3 color,
                          hermite::Interpolant twist = {},
                          std::optional<Id<HalfEdge>> twin = std::nullopt);
 

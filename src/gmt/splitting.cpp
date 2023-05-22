@@ -310,9 +310,9 @@ std::array<Id<HalfEdge>, 3> GradientMesh::t_junction(
 
   auto left = child_from(edge, mid);
   auto right = half_edge(parent, Interval(mid, interval.end), std::nullopt,
-                         color, twist, e.twin);
-  auto middle =
-      half_edge(parent, Interval(mid, mid), ortho_handles, color, -twist);
+                         false, color, twist, e.twin);
+  auto middle = half_edge(parent, Interval(mid, mid), ortho_handles, false,
+                          color, -twist);
 
   return {left, middle, right};
 }
@@ -322,8 +322,8 @@ Id<HalfEdge> GradientMesh::child_from(Id<HalfEdge> edge, float end_point)
   auto& e = edges[edge];
   if (e.is_parentable())
   {
-    auto ret = half_edge(edge, Interval(0.0f, end_point), std::nullopt, e.color,
-                         e.twist, e.twin);
+    auto ret = half_edge(edge, Interval(0.0f, end_point), std::nullopt, false,
+                         e.color, e.twist, e.twin);
     edges[edge].leftmost_child = ret;
     return ret;
   }

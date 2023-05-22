@@ -349,11 +349,11 @@ Id<HalfEdge> GradientMesh::half_edge(Id<ControlPoint> origin,
 
 Id<HalfEdge> GradientMesh::half_edge(
     Id<HalfEdge> parent, Interval interval,
-    std::optional<std::array<Id<Handle>, 2>> edge_handles, Vector3 color,
-    Interpolant twist, std::optional<Id<HalfEdge>> twin)
+    std::optional<std::array<Id<Handle>, 2>> edge_handles, bool recolored,
+    Vector3 color, Interpolant twist, std::optional<Id<HalfEdge>> twin)
 {
-  auto edge =
-      edges.add(HalfEdge(parent, interval, edge_handles, color, twist, twin));
+  auto edge = edges.add(
+      HalfEdge(parent, interval, edge_handles, recolored, color, twist, twin));
   if (edge_handles)
   {
     handles[edge_handles.value()[0]].edge = edge;
