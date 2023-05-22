@@ -518,7 +518,7 @@ def get_manually_simplified_hull(points, target_size):
 
         previous_size = len(hull.vertices)
 
-def get_automatically_simplified_hull(points, error_threshold=5.0/255.0):
+def get_automatically_simplified_hull(points, error_threshold=2.0/255.0):
     unique_points, counts = np.unique(points, axis=0, return_counts=True)
 
     hull = ConvexHull(unique_points)
