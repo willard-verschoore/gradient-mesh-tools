@@ -173,11 +173,40 @@ class GradientMesh
    */
   bool can_merge_neighbours(Id<HalfEdge> separator_edge,
                             MergeOptions merge_options);
+
   /**
    * Merges the two patches neighbouring to the given separator_edge when
    * this does not affect the resulting image.
    */
   void merge_neighbours(Id<HalfEdge> separator_edge);
+
+  /// Determines the continuity across the two patches neighboring \c separator.
+  /**
+   * Continuity up to C4 is checked. The returned integer indicates the degree
+   * of continuity. If the patches are discontinuous or \c separator is invalid,
+   * then -1 is returned. The separator edge is invalid if it is a boundary edge
+   * and therefore does not neighbor two patches. A parent edge with children is
+   * also invalid as this means that at least one of the neighboring patches is
+   * split.
+   *
+   * @param separator: The edge separating the two patches for which the
+   * continuity will be found.
+   * @param options: The tolerances to use when checking for continuity.
+   * @return An integer from -1 to 4 indicating the degree of continuity.
+   */
+  int patch_continuity(Id<HalfEdge> separator, MergeOptions options) const;
+
+  /// Determines the continuity across every pair of neighboring patches.
+  /**
+   * Continuity up to C4 is checked. The returned integers indicate the degrees
+   * of continuity. If two patches are discontinuous the corresponding degree is
+   * -1.
+   *
+   * @param options: The tolerances to use when checking for continuity.
+   * @return An array of integers from -1 to 4 indicating the degrees of
+   * continuity.
+   */
+  std::vector<int> patch_continuities(MergeOptions options) const;
 
   /// Returns a count of the number of handles in the mesh.
   int handle_count() const;
@@ -591,7 +620,7 @@ class GradientMesh
    * right matrices.
    */
   float potential_splitting_factor(hermite::PatchMatrix left,
-                                   hermite::PatchMatrix right);
+                                   hermite::PatchMatrix right) const;
 
   /**
    * Returns the relative (parent) interval lengths using the splitting factor

@@ -140,7 +140,7 @@ inline bool is_c3(hermite::PatchMatrix left, hermite::PatchMatrix right,
 }
 
 float GradientMesh::potential_splitting_factor(hermite::PatchMatrix left,
-                                               hermite::PatchMatrix right)
+                                               hermite::PatchMatrix right) const
 {
   return length(left(0, 2) / 3) / length((right(0, 1) + left(0, 2)) / 3);
 }
@@ -168,6 +168,64 @@ bool GradientMesh::can_merge_neighbours(Id<HalfEdge> separator_edge,
   auto t = potential_splitting_factor(hermite_left, hermite_right);
 
   return is_c3(hermite_left, hermite_right, t, merge_options);
+}
+
+int GradientMesh::patch_continuity(Id<HalfEdge> separator,
+                                   MergeOptions options) const
+{
+  // The edge must separate two patches, so it must have a twin.
+  if (!edges[separator].twin.has_value()) return -1;
+
+  // The edge must directly neighbor two patches, not through its children.
+  if (!children(separator, edges).empty()) return -1;
+
+  auto top_left = edges[separator].prev;
+  auto potential_top_right = adjacent_next(top_left, edges);
+  assert(potential_top_right.has_value());
+  auto top_right = potential_top_right.value();
+
+  // Since the top_right is determined using adjacent_next, it can be a parent.
+  // In that case, we should use the child, otherwise determining the patch
+  // matrix is very difficult.
+  top_right = first_child(top_right, edges);
+
+  auto hermite_left = patch_matrix(top_left);
+  auto hermite_right = patch_matrix(top_right);
+  auto t = potential_splitting_factor(hermite_left, hermite_right);
+
+  if (is_c3(hermite_left, hermite_right, t, options))
+    return 3;
+  else if (is_c2(hermite_left, hermite_right, t, options))
+    return 2;
+  else if (is_c1(hermite_left, hermite_right, t, options))
+    return 1;
+  else if (is_c0(hermite_left, hermite_right, options))
+    return 0;
+
+  return -1;
+}
+
+std::vector<int> GradientMesh::patch_continuities(MergeOptions options) const
+{
+  std::vector<int> continuities;
+
+  for (auto it = edges.begin(); it != edges.end(); ++it)
+  {
+    // Skip boundary edges.
+    if (!it->twin.has_value()) continue;
+
+    // Skip inactive parent edges.
+    Id<HalfEdge> edge_id = edges.get_handle(it);
+    if (!children(edge_id, edges).empty()) continue;
+
+    // Ensure we do not consider the same separator twice.
+    Id<HalfEdge> twin_id = it->twin.value();
+    if (it > edges.find(twin_id)) continue;
+
+    continuities.push_back(patch_continuity(edge_id, options));
+  }
+
+  return continuities;
 }
 
 } // namespace gmt
