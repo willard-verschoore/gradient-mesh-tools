@@ -496,24 +496,24 @@ def get_simplified_hull(points, target_size):
         return get_manually_simplified_hull(points, target_size)
 
 def get_manually_simplified_hull(points, target_size):
-    # A 3D convex hull has at least 4 vertices
+    # A 3D convex hull has at least 4 vertices.
     if target_size < 4:
         target_size = 4
 
     unique_points = np.unique(points, axis=0)
 
     hull = ConvexHull(unique_points)
-    project_hull_to_rgb_cube(hull)
     previous_size = len(hull.vertices)
 
     if len(hull.vertices) <= target_size:
+        project_hull_to_rgb_cube(hull)
         return hull
 
     while True:
         hull = remove_edge(hull)
-        project_hull_to_rgb_cube(hull)
 
         if len(hull.vertices) <= target_size or len(hull.vertices) == previous_size:
+            project_hull_to_rgb_cube(hull)
             return hull
 
         previous_size = len(hull.vertices)
@@ -522,24 +522,30 @@ def get_automatically_simplified_hull(points, error_threshold=2.0/255.0):
     unique_points, counts = np.unique(points, axis=0, return_counts=True)
 
     hull = ConvexHull(unique_points)
-    project_hull_to_rgb_cube(hull)
     previous_hull = hull
     previous_size = len(hull.vertices)
 
     # A 3D convex hull cannot have fewer than 4 vertices
     if len(hull.vertices) <= 4:
+        project_hull_to_rgb_cube(hull)
         return hull
 
     while True:
         hull = remove_edge(hull)
-        project_hull_to_rgb_cube(hull)
 
         if len(hull.vertices) <= 10:
-            rmse = calculate_rmse(hull, unique_points, counts)
+            # The RMSE calculations need to be done for the potential "final"
+            # hull, which will be projected to the RGB cube.
+            restricted_hull = ConvexHull(hull.points[hull.vertices])
+            project_hull_to_rgb_cube(restricted_hull)
+
+            rmse = calculate_rmse(restricted_hull, unique_points, counts)
             if rmse > error_threshold:
+                project_hull_to_rgb_cube(previous_hull)
                 return previous_hull
 
         if len(hull.vertices) == 4 or len(hull.vertices) == previous_size:
+            project_hull_to_rgb_cube(hull)
             return hull
 
         previous_hull = hull
