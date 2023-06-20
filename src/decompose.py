@@ -61,6 +61,7 @@ def get_mvc_weights(rgb_data, palette):
     vertices = hull.points[hull.vertices]
     simplices = consistent_winding_order_simplices(hull)
     weights = []
+    epsilon = 1e-3
 
     # Project outside data points onto the convex hull.
     rgb_data = project_outside_points_to_hull(rgb_data, hull)
@@ -72,7 +73,7 @@ def get_mvc_weights(rgb_data, palette):
 
         # If a color is very close to a vertex we set that vertex's weight to 1.
         min_index = np.argmin(ds)
-        if ds[min_index] < 1e-6:
+        if ds[min_index] < epsilon:
             weight_vector[min_index] = 1.0
             weights.append(weight_vector)
             continue
@@ -99,7 +100,7 @@ def get_mvc_weights(rgb_data, palette):
 
             # Use barycentric coordinates if the color lies on the hull triangle.
             h = (theta_1 + theta_2 + theta_3) / 2
-            if np.pi - h < 1e-6:
+            if np.pi - h < epsilon:
                 coordinates = barycentric_coordinates(hull.points[simplex], color)
                 weight_vector = np.zeros(len(vertices))
                 weight_vector[simplex] = coordinates
@@ -115,7 +116,7 @@ def get_mvc_weights(rgb_data, palette):
             s_3 = sign * np.sqrt(1 - c_3 * c_3)
 
             # Skip if the color lies outside but on the same plane as the hull triangle.
-            if np.abs(s_1) < 1e-6 or np.abs(s_2) < 1e-6 or np.abs(s_3) < 1e-6:
+            if np.abs(s_1) < epsilon or np.abs(s_2) < epsilon or np.abs(s_3) < epsilon:
                 continue
 
             w_1 = (theta_1 - c_2 * theta_3 - c_3 * theta_2) / (d_1 * np.sin(theta_2) * s_3)
