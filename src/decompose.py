@@ -63,9 +63,6 @@ def get_mvc_weights(rgb_data, palette):
     weights = []
     epsilon = 1e-3
 
-    # Project outside data points onto the convex hull.
-    rgb_data = project_outside_points_to_hull(rgb_data, hull)
-
     for color in rgb_data:
         weight_vector = np.zeros(len(vertices))
 
@@ -98,6 +95,10 @@ def get_mvc_weights(rgb_data, palette):
             theta_2 = 2 * np.arcsin(l_2 / 2)
             theta_3 = 2 * np.arcsin(l_3 / 2)
 
+            # Skip if the color lies outside the hull but is colinear with two triangle vertices.
+            if np.abs(theta_1) < epsilon or np.abs(theta_2) < epsilon or np.abs(theta_3) < epsilon:
+                continue
+
             # Use barycentric coordinates if the color lies on the hull triangle.
             h = (theta_1 + theta_2 + theta_3) / 2
             if np.pi - h < epsilon:
@@ -109,6 +110,11 @@ def get_mvc_weights(rgb_data, palette):
             c_1 = (2 * np.sin(h) * np.sin(h - theta_1)) / (np.sin(theta_2) * np.sin(theta_3)) - 1
             c_2 = (2 * np.sin(h) * np.sin(h - theta_2)) / (np.sin(theta_3) * np.sin(theta_1)) - 1
             c_3 = (2 * np.sin(h) * np.sin(h - theta_3)) / (np.sin(theta_1) * np.sin(theta_2)) - 1
+
+            # The cs should lie in the range [-1, 1] but numerical instability can cause issues.
+            c_1 = np.clip(c_1, -1, 1)
+            c_2 = np.clip(c_2, -1, 1)
+            c_3 = np.clip(c_3, -1, 1)
 
             sign = np.sign(np.linalg.det(np.vstack((u_1, u_2, u_3))))
             s_1 = sign * np.sqrt(1 - c_1 * c_1)
