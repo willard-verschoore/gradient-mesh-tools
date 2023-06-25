@@ -208,6 +208,9 @@ class GradientMesh
    */
   std::vector<int> patch_continuities(MergeOptions options) const;
 
+  /// Removes children from parents which have only one child.
+  void remove_only_children();
+
   /// Returns a count of the number of handles in the mesh.
   int handle_count() const;
 

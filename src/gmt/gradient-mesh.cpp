@@ -241,6 +241,21 @@ void GradientMesh::set_color_vertex(Id<HalfEdge> edge, Vector3 color)
   }
 }
 
+void GradientMesh::remove_only_children()
+{
+  for (auto it = edges.begin(); it != edges.end(); ++it)
+  {
+    Id<HalfEdge> edge_id = edges.get_handle(it);
+
+    if (children(edge_id, edges).size() == 1)
+    {
+      merge_parent_with_child(edge_id);
+      edges[edge_id].twist = {}; // Reset the parent's twist vector.
+      it = edges.begin(); // Reset the loop because an edge has been removed.
+    }
+  }
+}
+
 int GradientMesh::handle_count() const { return handles.size(); }
 
 int GradientMesh::edge_count() const { return edges.size(); }
