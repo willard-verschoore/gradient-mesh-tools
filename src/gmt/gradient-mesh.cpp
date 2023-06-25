@@ -256,6 +256,38 @@ void GradientMesh::remove_only_children()
   }
 }
 
+hermite::Vector3 GradientMesh::get_origin_color(Id<HalfEdge> edge) const
+{
+  // Get the first child's origin colour recursively.
+  Id<HalfEdge> child = first_child(edge, edges);
+  if (child == edge) return edges[edge].color; // Base case, leaf edge.
+  return get_origin_color(child);
+}
+
+void GradientMesh::set_origin_color(Id<HalfEdge> edge, hermite::Vector3 color)
+{
+  edges[edge].color = color;
+
+  // Set the first child's origin colour recursively if this edge has a child.
+  Id<HalfEdge> child = first_child(edge, edges);
+  if (child != edge) set_origin_color(child, color);
+}
+
+void GradientMesh::fix_inactive_origin_colors()
+{
+  for (auto it = edges.begin(); it != edges.end(); ++it)
+  {
+    // Skip non-parent edges.
+    Parent const* parent = std::get_if<Parent>(&it->kind);
+    if (!parent) continue;
+
+    // Set the origin color to match that of the lowest level child at t = 0.
+    Id<HalfEdge> parent_id = edges.get_handle(it);
+    Vector3 color = get_origin_color(parent_id);
+    set_origin_color(parent_id, color); // Traverses down the tree.
+  }
+}
+
 int GradientMesh::handle_count() const { return handles.size(); }
 
 int GradientMesh::edge_count() const { return edges.size(); }

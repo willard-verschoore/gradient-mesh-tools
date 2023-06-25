@@ -211,6 +211,15 @@ class GradientMesh
   /// Removes children from parents which have only one child.
   void remove_only_children();
 
+  /// Returns the color at the leaf of the tree below \c edge where t = 0.
+  hermite::Vector3 get_origin_color(Id<HalfEdge> edge) const;
+
+  /// Sets the color for every node of the tree below \c edge where t = 0.
+  void set_origin_color(Id<HalfEdge> edge, hermite::Vector3 color);
+
+  /// Ensures that the color of an inactive edge is the active color at t = 0.
+  void fix_inactive_origin_colors();
+
   /// Returns a count of the number of handles in the mesh.
   int handle_count() const;
 
