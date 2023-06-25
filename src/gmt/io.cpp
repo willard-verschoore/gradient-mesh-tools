@@ -8,6 +8,26 @@ namespace gmt
 
 using namespace hermite;
 
+size_t GradientMesh::get_index(Id<Handle> handle) const
+{
+  return handles.find(handle) - handles.begin();
+}
+
+size_t GradientMesh::get_index(Id<HalfEdge> edge) const
+{
+  return edges.find(edge) - edges.begin();
+}
+
+size_t GradientMesh::get_index(Id<Patch> patch) const
+{
+  return patches.find(patch) - patches.begin();
+}
+
+size_t GradientMesh::get_index(Id<ControlPoint> point) const
+{
+  return points.find(point) - points.begin();
+}
+
 // Utility function for reading 2D positions.
 static void read_position(std::istream &input, Vector2 &position)
 {
@@ -232,7 +252,7 @@ void GradientMesh::write_points(std::ostream &output) const
   {
     output << point.coords.x << ' ';
     output << point.coords.y << ' ';
-    output << point.edge.id << '\n';
+    output << get_index(point.edge) << '\n';
   }
 }
 
@@ -240,7 +260,7 @@ void GradientMesh::write_handles(std::ostream &output) const
 {
   for (auto const &handle : handles)
   {
-    output << handle.edge.id << ' ';
+    output << get_index(handle.edge) << ' ';
     output << handle.tangent.coords.x << ' ';
     output << handle.tangent.coords.y << ' ';
     output << handle.tangent.color.r << ' ';
@@ -251,7 +271,7 @@ void GradientMesh::write_handles(std::ostream &output) const
 
 void GradientMesh::write_patches(std::ostream &output) const
 {
-  for (auto const &patch : patches) output << patch.side.id << '\n';
+  for (auto const &patch : patches) output << get_index(patch.side) << '\n';
 }
 
 void GradientMesh::write_edges(std::ostream &output) const
@@ -271,8 +291,8 @@ void GradientMesh::write_edges(std::ostream &output) const
 
     if (edge.handles().has_value())
     {
-      output << edge.handles().value()[0].id << ' '; // 10
-      output << edge.handles().value()[1].id << ' '; // 11
+      output << get_index(edge.handles().value()[0]) << ' '; // 10
+      output << get_index(edge.handles().value()[1]) << ' '; // 11
     }
     else
     {
@@ -281,16 +301,16 @@ void GradientMesh::write_edges(std::ostream &output) const
     }
 
     if (edge.twin.has_value())
-      output << edge.twin.value().id << ' '; // 12
+      output << get_index(edge.twin.value()) << ' '; // 12
     else
       output << -1 << ' '; // 12
 
-    output << edge.prev.id << ' ';  // 13
-    output << edge.next.id << ' ';  // 14
-    output << edge.patch.id << ' '; // 15
+    output << get_index(edge.prev) << ' ';  // 13
+    output << get_index(edge.next) << ' ';  // 14
+    output << get_index(edge.patch) << ' '; // 15
 
     if (edge.leftmost_child.has_value())
-      output << edge.leftmost_child.value().id << ' '; // 16
+      output << get_index(edge.leftmost_child.value()) << ' '; // 16
     else
       output << -1 << ' '; // 16
 
@@ -298,13 +318,13 @@ void GradientMesh::write_edges(std::ostream &output) const
     auto parent_f = std::get_if<Parent>(&edge.kind);
     if (child_f)
     {
-      output << 1 << ' ';                  // 17
-      output << child_f->parent.id << ' '; // 18
+      output << 1 << ' ';                          // 17
+      output << get_index(child_f->parent) << ' '; // 18
 
       if (child_f->handles.has_value())
       {
-        output << child_f->handles.value()[0].id << ' '; // 19
-        output << child_f->handles.value()[1].id << ' '; // 20
+        output << get_index(child_f->handles.value()[0]) << ' '; // 19
+        output << get_index(child_f->handles.value()[1]) << ' '; // 20
       }
       else
       {
@@ -319,10 +339,10 @@ void GradientMesh::write_edges(std::ostream &output) const
     }
     else
     {
-      output << 0 << ' ';                       // 17
-      output << parent_f->handles[0].id << ' '; // 18
-      output << parent_f->handles[1].id << ' '; // 19
-      output << parent_f->origin.id << ' ';     // 20
+      output << 0 << ' ';                               // 17
+      output << get_index(parent_f->handles[0]) << ' '; // 18
+      output << get_index(parent_f->handles[1]) << ' '; // 19
+      output << get_index(parent_f->origin) << ' ';     // 20
     }
 
     output << '\n';

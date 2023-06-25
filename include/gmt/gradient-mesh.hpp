@@ -810,6 +810,11 @@ class GradientMesh
   void write_patches(std::ostream& output) const;
   void write_edges(std::ostream& output) const;
 
+  size_t get_index(Id<Handle> handle) const;
+  size_t get_index(Id<HalfEdge> handle) const;
+  size_t get_index(Id<Patch> handle) const;
+  size_t get_index(Id<ControlPoint> handle) const;
+
   Storage<Handle> handles;
   Storage<HalfEdge> edges;
   Storage<Patch> patches;
