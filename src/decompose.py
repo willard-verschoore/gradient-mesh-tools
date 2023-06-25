@@ -38,6 +38,10 @@ def get_weights(rgbxy_data, palette, weight_type=WeightType.RGBXY):
     return weights
 
 def get_rgbxy_weights(rgbxy_data, palette):
+    # Joggle in the input slightly to avoid precision errors in Qhull.
+    random_offset = 1e-6 * (2.0 * np.random.rand(rgbxy_data.shape[0], rgbxy_data.shape[1]) - 1.0)
+    rgbxy_data += random_offset
+
     try:
         rgbxy_hull_vertices = rgbxy_data[ConvexHull(rgbxy_data).vertices]
         w_rgbxy = delaunay_coordinates(rgbxy_hull_vertices, rgbxy_data)
@@ -182,7 +186,7 @@ def delaunay_coordinates(vertices, data): # Adapted from Gareth Rees
     # Compute Delaunay tessellation.
     tri = Delaunay(vertices)
     # Find the tetrahedron containing each target (or -1 if not found).
-    simplices = tri.find_simplex(data, tol=1e-6)
+    simplices = tri.find_simplex(data, tol=1e-4)
     assert (simplices != -1).all() # data contains outside vertices.
     # Affine transformation for simplex containing each datum.
     X = tri.transform[simplices, :data.shape[1]]
