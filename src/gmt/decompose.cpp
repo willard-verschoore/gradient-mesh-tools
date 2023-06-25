@@ -14,6 +14,89 @@ using namespace hermite;
 
 const int GradientMesh::MAX_SAMPLING_DENSITY = 64;
 
+static bool equal_colors(Vector3 color1, Vector3 color2)
+{
+  Vector3 difference = 255.0f * (color1 - color2);
+  return abs(difference.r) < 1.0f && abs(difference.g) < 1.0f &&
+         abs(difference.b) < 1.0f;
+}
+
+hermite::Vector3 GradientMesh::find_color_opposite_origin(
+    Id<HalfEdge> edge) const
+{
+  float t = edges[edge].interval().start;
+
+  // If this edge is orthogonal to its parent as part of a t-junction we move up
+  // to the parent edge before finding the twin.
+  if (is_empty(edges[edge].interval()))
+  {
+    Child const *child = std::get_if<Child>(&edges[edge].kind);
+    if (!child) return {-1.0f, -1.0f, -1.0f};
+    edge = child->parent;
+  }
+
+  // Find the twin edge on the other side of the curve. Return an error value if
+  // it does not exist.
+  if (!edges[edge].twin.has_value()) return {-1.0f, -1.0f, -1.0f};
+  Id<HalfEdge> opposite = edges[edge].twin.value();
+
+  // Find the leaf node of the twin which overlaps with our edge's origin.
+  Id<HalfEdge> old_opposite;
+  while (old_opposite != opposite)
+  {
+    // Note that the opposing half edge goes in the opposite direction. So its
+    // interval is inverted and we use 1 - t.
+    old_opposite = opposite;
+    opposite = find_child_contains_t(opposite, 1.0f - t);
+  }
+
+  CurveMatrix opposite_curve = curve_matrix(opposite);
+  Interval opposite_interval = edges[opposite].relative_interval();
+  float opposite_t = relative_child_position(opposite_interval, 1.0f - t);
+
+  return interpolate(opposite_curve, opposite_t).color;
+}
+
+std::vector<Id<HalfEdge>> GradientMesh::find_continuous_t_junctions() const
+{
+  std::vector<Id<HalfEdge>> t_edges;
+
+  for (auto it = edges.begin(); it != edges.end(); ++it)
+  {
+    // Every t-junction has an edge orthogonal to the head. This edge is a child
+    // of the half edge along the bottom of the head and its interval is [t, t]
+    // with t the coordinate of the t-junction along the parent.
+    Child const *child = std::get_if<Child>(&it->kind);
+    if (!child) continue;
+    if (!is_empty(child->interval)) continue;
+
+    Id<HalfEdge> edge = edges.get_handle(it);
+    Vector3 opposite_color = find_color_opposite_origin(edge);
+
+    // The t-junction is (partly) continuous if the color on one side of the
+    // stem matches the color above the head.
+    if (equal_colors(it->color, opposite_color)) t_edges.push_back(edge);
+
+    // We also check the color on the other side of the stem.
+    if (!it->twin) continue;
+    Id<HalfEdge> next_child = edges[it->twin.value()].next;
+    if (equal_colors(edges[next_child].color, opposite_color))
+      t_edges.push_back(next_child);
+  }
+
+  return t_edges;
+}
+
+void GradientMesh::fix_continuous_t_junctions(
+    std::vector<Id<HalfEdge>> const &junctions)
+{
+  for (Id<HalfEdge> edge : junctions)
+  {
+    Vector3 opposite_color = find_color_opposite_origin(edge);
+    set_origin_color(edge, opposite_color); // Traverses down the tree.
+  }
+}
+
 std::vector<Vector3> GradientMesh::sample_colors(int density) const
 {
   density = std::max(1, density);                    // Ensure positive density.
@@ -529,6 +612,7 @@ void GradientMesh::recolor(std::vector<float> const &weights,
                            std::vector<Vector3> const &palette, bool bezier,
                            bool inactive, bool create_tangents)
 {
+  std::vector<Id<HalfEdge>> junctions = find_continuous_t_junctions();
   std::vector<PatchMatrix> patches = patch_data();
   int increment = bezier ? 1 : 3;     // 1 for all elements, 3 for just corners.
   Vector3 color = {0.0f, 0.0f, 0.0f}; // Stores a sum of palette colors.
@@ -564,7 +648,11 @@ void GradientMesh::recolor(std::vector<float> const &weights,
   // TODO: Is this function necessary? Use read_patch_matrix in the loop above?
   read_patch_data(patches, create_tangents);
 
-  if (!inactive) return;
+  if (!inactive)
+  {
+    fix_continuous_t_junctions(junctions);
+    return;
+  }
 
   // Recolor inactive edges (edges with parallel children).
   for (auto it = edges.begin(); it != edges.end(); ++it)
@@ -596,6 +684,8 @@ void GradientMesh::recolor(std::vector<float> const &weights,
 
     read_curve_matrix(edge, curve, create_tangents);
   }
+
+  fix_continuous_t_junctions(junctions);
 }
 
 } // namespace gmt

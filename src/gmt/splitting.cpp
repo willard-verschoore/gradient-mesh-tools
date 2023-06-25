@@ -155,7 +155,8 @@ float GradientMesh::calculate_next_t(Id<HalfEdge> opp, float t)
   return next_t;
 }
 
-Id<HalfEdge> GradientMesh::find_child_contains_t(Id<HalfEdge> parent, float t)
+Id<HalfEdge> GradientMesh::find_child_contains_t(Id<HalfEdge> parent,
+                                                 float t) const
 {
   auto siblings = children(parent, edges);
 

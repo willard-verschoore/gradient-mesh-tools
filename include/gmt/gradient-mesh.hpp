@@ -70,7 +70,7 @@ class GradientMesh
   /**
    * if no child is found parent is returned
    */
-  Id<HalfEdge> find_child_contains_t(Id<HalfEdge> parent, float t);
+  Id<HalfEdge> find_child_contains_t(Id<HalfEdge> parent, float t) const;
 
   /// Find relative t value on child edge
   /**
@@ -811,6 +811,15 @@ class GradientMesh
    */
   void read_patch_matrix(Patch const& patch, hermite::PatchMatrix const& matrix,
                          bool create_tangents);
+
+  /// Finds the color on the other side of the edge at the origin of \c edge.
+  hermite::Vector3 find_color_opposite_origin(Id<HalfEdge> edge) const;
+
+  /// Finds t-junctions whose color matches the other side of the edge.
+  std::vector<Id<HalfEdge>> find_continuous_t_junctions() const;
+
+  /// Ensures that each junction's color matches the other side of the edge.
+  void fix_continuous_t_junctions(std::vector<Id<HalfEdge>> const& junctions);
 
   void read_points(std::istream& input, int num_points);
   void read_handles(std::istream& input, int num_handles);
