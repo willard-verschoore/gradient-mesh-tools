@@ -74,7 +74,10 @@ std::vector<Id<HalfEdge>> GradientMesh::find_continuous_t_junctions() const
     Vector3 opposite_color = find_color_opposite_origin(edge);
 
     // The t-junction is (partly) continuous if the color on one side of the
-    // stem matches the color above the head.
+    // stem matches the color above the head. Alternatively, we could check
+    // whether the origin color of the edge in the t-junction has not been
+    // changed, i.e. it still equals the colour of its parent curve at t. There
+    // are slight differences between these two approaches.
     if (equal_colors(it->color, opposite_color)) t_edges.push_back(edge);
 
     // We also check the color on the other side of the stem.
@@ -92,8 +95,15 @@ void GradientMesh::fix_continuous_t_junctions(
 {
   for (Id<HalfEdge> edge : junctions)
   {
-    Vector3 opposite_color = find_color_opposite_origin(edge);
-    set_origin_color(edge, opposite_color); // Traverses down the tree.
+    // An edge at a t-junction should always be a child.
+    Child const *child = std::get_if<Child>(&edges[edge].kind);
+    if (!child) continue;
+
+    // Interpolate along the parent curve to get the new junction color.
+    float t = child->interval.start;
+    CurveMatrix parent_curve = curve_matrix(child->parent);
+    Vector3 parent_color = interpolate(parent_curve, t).color;
+    set_origin_color(edge, parent_color); // Traverses down the tree.
   }
 }
 
