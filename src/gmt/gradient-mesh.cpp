@@ -277,14 +277,14 @@ void GradientMesh::fix_inactive_origin_colors()
 {
   for (auto it = edges.begin(); it != edges.end(); ++it)
   {
-    // Skip non-parent edges.
-    Parent const* parent = std::get_if<Parent>(&it->kind);
-    if (!parent) continue;
+    Id<HalfEdge> edge_id = edges.get_handle(it);
+
+    // Skip active edges.
+    if (children(edge_id, edges).empty()) continue;
 
     // Set the origin color to match that of the lowest level child at t = 0.
-    Id<HalfEdge> parent_id = edges.get_handle(it);
-    Vector3 color = get_origin_color(parent_id);
-    set_origin_color(parent_id, color); // Traverses down the tree.
+    Vector3 color = get_origin_color(edge_id);
+    set_origin_color(edge_id, color); // Traverses down the tree.
   }
 }
 

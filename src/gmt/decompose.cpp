@@ -650,6 +650,7 @@ void GradientMesh::recolor(std::vector<float> const &weights,
 
   if (!inactive)
   {
+    fix_inactive_origin_colors();
     fix_continuous_t_junctions(junctions);
     return;
   }
@@ -685,6 +686,7 @@ void GradientMesh::recolor(std::vector<float> const &weights,
     read_curve_matrix(edge, curve, create_tangents);
   }
 
+  fix_inactive_origin_colors();
   fix_continuous_t_junctions(junctions);
 }
 
