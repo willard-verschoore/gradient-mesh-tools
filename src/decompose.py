@@ -39,7 +39,8 @@ def get_weights(rgbxy_data, palette, weight_type=WeightType.RGBXY):
 
 def get_rgbxy_weights(rgbxy_data, palette):
     # Joggle in the input slightly to avoid precision errors in Qhull.
-    random_offset = 1e-6 * (2.0 * np.random.rand(rgbxy_data.shape[0], rgbxy_data.shape[1]) - 1.0)
+    generator = np.random.default_rng(42)
+    random_offset = 1e-6 * (2.0 * generator.random(rgbxy_data.shape) - 1.0)
     rgbxy_data += random_offset
 
     try:
